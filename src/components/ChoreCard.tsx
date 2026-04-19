@@ -1,5 +1,5 @@
-import type { Chore, User } from '../types';
-import type { ChoreStatus } from '../types';
+import { ListRow, Badge } from '@toss/tds-mobile';
+import type { Chore, ChoreStatus, User } from '../types';
 
 interface ChoreCardProps {
   chore: Chore;
@@ -17,10 +17,18 @@ const STATUS_LABELS: Record<ChoreStatus, string> = {
   completed: '완료',
 };
 
+const STATUS_COLORS: Record<ChoreStatus, 'blue' | 'teal' | 'green' | 'red' | 'yellow' | 'elephant'> = {
+  draft: 'elephant',
+  pending: 'blue',
+  in_progress: 'blue',
+  help_requested: 'yellow',
+  reassigned: 'blue',
+  completed: 'green',
+};
+
 export default function ChoreCard({ chore, currentUser, partner, onClick }: ChoreCardProps) {
   const today = new Date().toISOString().split('T')[0];
   const isOverdue = chore.due_date < today && chore.status !== 'completed';
-  const isHelpRequested = chore.status === 'help_requested';
 
   const assigneeName =
     chore.assignee_id === currentUser.id
@@ -28,54 +36,28 @@ export default function ChoreCard({ chore, currentUser, partner, onClick }: Chor
       : partner?.nickname ?? '파트너';
 
   return (
-    <div
+    <ListRow
       onClick={onClick}
-      style={{
-        padding: '16px',
-        borderRadius: '12px',
-        backgroundColor: '#ffffff',
-        border: '1px solid #e5e7eb',
-        cursor: 'pointer',
-        marginBottom: '8px',
-      }}
-    >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-        <span style={{ fontWeight: 600, fontSize: '16px', color: '#111827' }}>
-          {chore.title}
-        </span>
-        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-          <span
-            style={{
-              fontSize: '12px',
-              padding: '2px 8px',
-              borderRadius: '12px',
-              backgroundColor: isHelpRequested ? '#fed7aa' : '#f3f4f6',
-              color: isHelpRequested ? '#c2410c' : '#6b7280',
-              fontWeight: 500,
-            }}
-          >
+      contents={
+        <ListRow.Texts
+          type="2RowTypeA"
+          top={chore.title}
+          bottom={`담당: ${assigneeName} · ${chore.due_date}`}
+        />
+      }
+      right={
+        <div style={{ display: 'flex', gap: 6 }}>
+          <Badge size="small" variant="fill" color={STATUS_COLORS[chore.status]}>
             {STATUS_LABELS[chore.status]}
-          </span>
+          </Badge>
           {isOverdue && (
-            <span
-              style={{
-                fontSize: '12px',
-                padding: '2px 8px',
-                borderRadius: '12px',
-                backgroundColor: '#fee2e2',
-                color: '#dc2626',
-                fontWeight: 500,
-              }}
-            >
+            <Badge size="small" variant="fill" color="red">
               기한 초과
-            </span>
+            </Badge>
           )}
         </div>
-      </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ fontSize: '14px', color: '#6b7280' }}>담당: {assigneeName}</span>
-        <span style={{ fontSize: '13px', color: '#9ca3af' }}>{chore.due_date}</span>
-      </div>
-    </div>
+      }
+      arrowType="right"
+    />
   );
 }

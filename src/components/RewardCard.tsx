@@ -1,3 +1,4 @@
+import { ListRow, Badge, Button } from '@toss/tds-mobile';
 import type { Reward, RewardStatus } from '../types';
 import { REWARD_TEMPLATES } from '../constants';
 
@@ -14,69 +15,50 @@ const STATUS_LABELS: Record<RewardStatus, string> = {
   used: '사용 완료',
 };
 
+const STATUS_COLORS: Record<RewardStatus, 'blue' | 'teal' | 'green' | 'red' | 'yellow' | 'elephant'> = {
+  pending: 'elephant',
+  accepted: 'blue',
+  used: 'green',
+};
+
 export default function RewardCard({ reward, isReceived, onAccept, onUse }: RewardCardProps) {
   const template = REWARD_TEMPLATES.find((t) => t.key === reward.template_key);
   const displayText = template ? template.label : (reward.custom_text ?? '선물');
   const displayEmoji = template ? template.emoji : '🎁';
 
+  const actionButton = (() => {
+    if (isReceived && reward.status === 'pending' && onAccept) {
+      return (
+        <Button size="small" color="primary" variant="fill" onClick={onAccept}>
+          수락하기
+        </Button>
+      );
+    }
+    if (isReceived && reward.status === 'accepted' && onUse) {
+      return (
+        <Button size="small" color="primary" variant="weak" onClick={onUse}>
+          사용 완료
+        </Button>
+      );
+    }
+    return (
+      <Badge size="small" variant="fill" color={STATUS_COLORS[reward.status]}>
+        {STATUS_LABELS[reward.status]}
+      </Badge>
+    );
+  })();
+
   return (
-    <div
-      style={{
-        padding: '16px',
-        borderRadius: '12px',
-        backgroundColor: '#ffffff',
-        border: '1px solid #e5e7eb',
-        marginBottom: '8px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <span style={{ fontSize: '28px' }}>{displayEmoji}</span>
-        <div>
-          <div style={{ fontWeight: 600, fontSize: '15px', color: '#111827' }}>{displayText}</div>
-          <div style={{ fontSize: '13px', color: '#9ca3af', marginTop: '2px' }}>
-            {STATUS_LABELS[reward.status]}
-          </div>
-        </div>
-      </div>
-      <div>
-        {isReceived && reward.status === 'pending' && onAccept && (
-          <button
-            onClick={onAccept}
-            style={{
-              padding: '8px 16px',
-              borderRadius: '8px',
-              backgroundColor: '#3b82f6',
-              color: '#ffffff',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: 600,
-            }}
-          >
-            수락하기
-          </button>
-        )}
-        {isReceived && reward.status === 'accepted' && onUse && (
-          <button
-            onClick={onUse}
-            style={{
-              padding: '8px 16px',
-              borderRadius: '8px',
-              backgroundColor: '#10b981',
-              color: '#ffffff',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: 600,
-            }}
-          >
-            사용 완료
-          </button>
-        )}
-      </div>
-    </div>
+    <ListRow
+      left={<span style={{ fontSize: 28 }}>{displayEmoji}</span>}
+      contents={
+        <ListRow.Texts
+          type="2RowTypeA"
+          top={displayText}
+          bottom={STATUS_LABELS[reward.status]}
+        />
+      }
+      right={actionButton}
+    />
   );
 }
