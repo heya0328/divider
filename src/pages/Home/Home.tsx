@@ -48,10 +48,21 @@ export default function Home() {
   return (
     <div style={{ minHeight: '100vh', paddingBottom: '80px' }}>
       {/* Header */}
-      <div style={{ padding: '20px 16px 16px', borderBottom: '1px solid #e5e7eb' }}>
+      <div style={{ padding: '20px 16px 16px', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Paragraph typography="t3" fontWeight="bold" color="#111827">
-          <Paragraph.Text>안녕하세요, {user.nickname}님</Paragraph.Text>
+          <Paragraph.Text>오늘의 우리 집안일</Paragraph.Text>
         </Paragraph>
+        <Button
+          size="small"
+          color="light"
+          variant="weak"
+          onClick={() => {
+            localStorage.removeItem('divider_dev_user_id');
+            window.location.href = '/';
+          }}
+        >
+          초기화
+        </Button>
       </div>
 
       <div style={{ padding: '16px' }}>

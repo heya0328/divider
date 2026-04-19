@@ -149,6 +149,20 @@ export default function CreateCode() {
         >
           이미 코드가 있어요
         </Button>
+
+        <Spacing size={32} />
+        <Button
+          size="small"
+          display="full"
+          color="light"
+          variant="weak"
+          onClick={() => {
+            localStorage.removeItem('divider_dev_user_id');
+            window.location.href = '/';
+          }}
+        >
+          다른 사용자로 시작하기
+        </Button>
       </div>
     </div>
   );
