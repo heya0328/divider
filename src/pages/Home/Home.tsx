@@ -1,11 +1,14 @@
 import { useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Spacing, Top, List, ListRow, Text, Asset, Button, useDialog } from '@toss/tds-mobile';
+import { Spacing, Top, List, ListRow, ListHeader, Text, Asset, Button, useDialog } from '@toss/tds-mobile';
 import { adaptive } from '@toss/tds-colors';
 import { useApp } from '../../context/AppContext';
 import { revertToInProgress, completeChore } from '../../data/chores';
 import { expireOldHelpRequests } from '../../data/helpRequests';
+import { syncRecurringChores } from '../../data/choreTemplates';
 import ChoreCard from '../../components/ChoreCard';
+import EmptyState from '../../components/EmptyState';
+import BottomTab from '../../components/BottomTab';
 import type { Chore } from '../../types';
 
 export default function Home() {
@@ -15,12 +18,16 @@ export default function Home() {
 
   const loadData = useCallback(async () => {
     await refreshData();
+    if (user?.couple_id) {
+      const created = await syncRecurringChores(user.couple_id);
+      if (created > 0) await refreshData();
+    }
     for (const c of chores.filter(ch => ch.status === 'help_requested')) {
       const expired = await expireOldHelpRequests(c.id);
       if (expired) await revertToInProgress(c.id);
     }
     await refreshData();
-  }, [refreshData, chores]);
+  }, [refreshData, chores, user?.couple_id]);
 
   useEffect(() => {
     loadData();
@@ -65,60 +72,62 @@ export default function Home() {
 
   return (
     <div style={{ minHeight: '100vh', paddingBottom: '80px' }}>
-      {/* Title */}
       <Top
         title={
           <Top.TitleParagraph size={22} color={adaptive.grey900}>
             {`오늘의 우리 집안일 ${totalActive}개`}
           </Top.TitleParagraph>
         }
-        right={
-          <Button size="small" color="light" variant="weak" onClick={() => {
-            localStorage.removeItem('divider_dev_user_id');
-            window.location.href = '/';
-          }}>
-            초기화
-          </Button>
-        }
       />
 
       {/* 감사 전하기 */}
       {needsThanks.length > 0 && (
         <>
-          <Spacing size={8} />
-          <List>
+          <div style={{
+            margin: '0 20px',
+            padding: '16px',
+            backgroundColor: adaptive.blue50,
+            borderRadius: '16px',
+          }}>
             {needsThanks.map(chore => (
-              <ListRow
+              <div
                 key={chore.id}
                 onClick={() => navigate(`/thanks/${chore.id}`)}
-                left={<span style={{ fontSize: '20px' }}>🙏</span>}
-                contents={
-                  <ListRow.Texts
-                    type="2RowTypeA"
-                    top={`${partner?.nickname ?? '파트너'}님이 대신 해줬어요`}
-                    topProps={{ color: adaptive.blue500, fontWeight: 'bold' }}
-                    bottom={chore.title}
-                    bottomProps={{ color: adaptive.grey600 }}
-                  />
-                }
-                arrowType="right"
-                verticalPadding="large"
-              />
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '12px',
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{ fontSize: '24px' }}>🙏</span>
+                <div style={{ flex: 1 }}>
+                  <Text typography="t6" fontWeight="bold" color={adaptive.blue500}>
+                    {`${partner?.nickname ?? '파트너'}님이 대신 해줬어요`}
+                  </Text>
+                  <Text typography="t7" color={adaptive.grey500}>{chore.title}</Text>
+                </div>
+                <Asset.Icon
+                  frameShape={Asset.frameShape.CleanW24}
+                  name="icon-arrow-right-mono"
+                  color={adaptive.blue400}
+                  aria-hidden
+                />
+              </div>
             ))}
-          </List>
+          </div>
+          <Spacing size={8} />
         </>
       )}
 
       {/* 수락 대기 중 */}
       {pendingApproval.length > 0 && (
         <>
-          <Spacing size={16} />
-          <div style={{ padding: '0 16px' }}>
-            <Text color={adaptive.red500} typography="t6" fontWeight="semibold">
-              수락 대기 중 {pendingApproval.length}
-            </Text>
-          </div>
-          <Spacing size={4} />
+          <ListHeader
+            title={
+              <ListHeader.TitleParagraph typography="t5" color={adaptive.red500} fontWeight="bold">
+                {`수락 대기 중 ${pendingApproval.length}`}
+              </ListHeader.TitleParagraph>
+            }
+          />
           {pendingApproval.map(chore => (
             <ChoreCard
               key={chore.id}
@@ -132,17 +141,15 @@ export default function Home() {
       )}
 
       {/* 내 할 일 */}
-      <Spacing size={16} />
-      <div style={{ padding: '0 16px' }}>
-        <Text color={adaptive.grey900} typography="t6" fontWeight="semibold">
-          내 할 일 {myChores.length}
-        </Text>
-      </div>
-      <Spacing size={4} />
+      <ListHeader
+        title={
+          <ListHeader.TitleParagraph typography="t5" color={adaptive.grey900} fontWeight="bold">
+            {`내 할 일 ${myChores.length}`}
+          </ListHeader.TitleParagraph>
+        }
+      />
       {myChores.length === 0 ? (
-        <div style={{ padding: '32px 16px', textAlign: 'center' }}>
-          <Text color={adaptive.grey400} typography="t6">할 일이 없어요</Text>
-        </div>
+        <EmptyState message="할 일이 없어요" icon="icon-check-mono" />
       ) : (
         myChores.map(chore => (
           <ChoreCard
@@ -157,31 +164,28 @@ export default function Home() {
       )}
 
       {/* 파트너 할 일 */}
-      <Spacing size={16} />
-      <div style={{ padding: '0 16px' }}>
-        <Text color={adaptive.grey900} typography="t6" fontWeight="semibold">
-          파트너 할 일 {partnerChores.length}
-        </Text>
-      </div>
-      <Spacing size={4} />
+      <ListHeader
+        title={
+          <ListHeader.TitleParagraph typography="t5" color={adaptive.grey900} fontWeight="bold">
+            {`파트너 할 일 ${partnerChores.length}`}
+          </ListHeader.TitleParagraph>
+        }
+      />
       {partnerChores.length === 0 ? (
-        <div style={{ padding: '32px 16px', textAlign: 'center' }}>
-          <Text color={adaptive.grey400} typography="t6">
-            {partner ? '파트너에게 할 일이 없어요' : '파트너와 연결해주세요'}
-          </Text>
-        </div>
+        <EmptyState
+          message={partner ? '파트너에게 할 일이 없어요' : '파트너와 연결해주세요'}
+          icon="icon-person-mono"
+        />
       ) : (
-        <>
-          {partnerChores.map(chore => (
-            <ChoreCard
-              key={chore.id}
-              chore={chore}
-              currentUser={user}
-              partner={partner}
-              onClick={() => navigate(`/chore/${chore.id}`)}
-            />
-          ))}
-        </>
+        partnerChores.map(chore => (
+          <ChoreCard
+            key={chore.id}
+            chore={chore}
+            currentUser={user}
+            partner={partner}
+            onClick={() => navigate(`/chore/${chore.id}`)}
+          />
+        ))
       )}
 
       {/* FAB */}
@@ -205,21 +209,7 @@ export default function Home() {
         <Asset.Icon frameShape={Asset.frameShape.CleanW24} name="icon-plus-mono" color="#fff" aria-hidden />
       </div>
 
-      {/* Bottom Tab */}
-      <div style={{
-        position: 'fixed', bottom: 0, left: 0, right: 0,
-        display: 'flex', backgroundColor: '#fff', borderTop: `1px solid ${adaptive.grey100}`,
-        padding: '8px 0 4px',
-      }}>
-        <div style={{ flex: 1, textAlign: 'center', cursor: 'pointer' }} onClick={() => navigate('/home')}>
-          <Asset.Icon frameShape={Asset.frameShape.CleanW24} name="icon-home-mono" color={adaptive.grey800} aria-hidden />
-          <Text display="block" color={adaptive.grey900} typography="st13" fontWeight="medium" textAlign="center">홈</Text>
-        </div>
-        <div style={{ flex: 1, textAlign: 'center', cursor: 'pointer' }} onClick={() => navigate('/rewards')}>
-          <Asset.Icon frameShape={Asset.frameShape.CleanW24} name="icon-diamond-mono" color={adaptive.grey400} aria-hidden />
-          <Text display="block" color={adaptive.grey600} typography="st13" fontWeight="medium" textAlign="center">보상</Text>
-        </div>
-      </div>
+      <BottomTab />
     </div>
   );
 }
