@@ -25,7 +25,11 @@
   "homepage": "https://github.com/heya0328/divider#readme",
   "dependencies": {
     "@apps-in-toss/web-framework": "^2.4.7",
+    "@emotion/react": "^11.14.0",
     "@supabase/supabase-js": "^2.103.3",
+    "@toss/tds-mobile": "^2.3.0",
+    "@toss/tds-mobile-ait": "^2.3.0",
+    "framer-motion": "^12.38.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "react-router-dom": "^7.14.1"

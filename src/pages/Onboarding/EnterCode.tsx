@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Paragraph, Spacing, TextField, Button } from '@toss/tds-mobile';
 import { useApp } from '../../context/AppContext';
 import { joinWithCode } from '../../data/couples';
 
 export default function EnterCode() {
-  const { user } = useApp();
+  const { user, dispatch } = useApp();
   const navigate = useNavigate();
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
@@ -15,7 +16,12 @@ export default function EnterCode() {
     setLoading(true);
     setError(null);
     try {
-      await joinWithCode(user.id, code);
+      const updatedCouple = await joinWithCode(user.id, code);
+      // Update user with the new couple_id so the app knows we're matched
+      dispatch({
+        type: 'SET_USER',
+        payload: { ...user, couple_id: updatedCouple.id },
+      });
       navigate('/home');
     } catch (err) {
       if (err instanceof Error) {
@@ -33,70 +39,40 @@ export default function EnterCode() {
   };
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        backgroundColor: '#f9fafb',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-      }}
-    >
-      <div style={{ maxWidth: '400px', width: '100%', textAlign: 'center' }}>
-        <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#111827', marginBottom: '8px' }}>
-          초대코드 입력
-        </h1>
-        <p style={{ fontSize: '15px', color: '#6b7280', marginBottom: '32px' }}>
-          파트너에게 받은 6자리 코드를 입력해요
-        </p>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', paddingBottom: '100px' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '24px' }}>
+        <Paragraph typography="t3" fontWeight="bold" color="#111827" textAlign="center">
+          <Paragraph.Text>초대코드 입력</Paragraph.Text>
+        </Paragraph>
+        <Spacing size={8} />
+        <Paragraph typography="t6" color="#6b7280" textAlign="center">
+          <Paragraph.Text>파트너에게 받은 6자리 코드를 입력해요</Paragraph.Text>
+        </Paragraph>
+        <Spacing size={32} />
 
-        <input
-          type="text"
+        <TextField
+          variant="box"
+          label="초대코드"
+          placeholder="XXXXXX"
           value={code}
           onChange={(e) => setCode(e.target.value.toUpperCase().slice(0, 6))}
-          placeholder="XXXXXX"
-          maxLength={6}
-          style={{
-            width: '100%',
-            padding: '16px',
-            borderRadius: '12px',
-            border: error ? '2px solid #dc2626' : '2px solid #e5e7eb',
-            fontSize: '28px',
-            fontWeight: 700,
-            letterSpacing: '8px',
-            textAlign: 'center',
-            fontFamily: 'monospace',
-            backgroundColor: '#ffffff',
-            outline: 'none',
-            boxSizing: 'border-box',
-          }}
+          hasError={!!error}
+          help={error ?? undefined}
         />
+      </div>
 
-        {error && (
-          <p style={{ color: '#dc2626', fontSize: '14px', marginTop: '8px' }}>{error}</p>
-        )}
-
-        <button
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px' }}>
+        <Button
+          size="xlarge"
+          display="full"
+          color="primary"
+          variant="fill"
           onClick={handleSubmit}
           disabled={loading || code.length !== 6}
-          style={{
-            width: '100%',
-            padding: '16px',
-            borderRadius: '12px',
-            backgroundColor: '#3b82f6',
-            color: '#ffffff',
-            border: 'none',
-            fontSize: '16px',
-            fontWeight: 700,
-            cursor: loading || code.length !== 6 ? 'not-allowed' : 'pointer',
-            opacity: loading || code.length !== 6 ? 0.5 : 1,
-            marginTop: '16px',
-          }}
+          loading={loading}
         >
-          {loading ? '확인 중...' : '입력하기'}
-        </button>
+          {loading ? '확인 중...' : '파트너와 연결하기'}
+        </Button>
       </div>
     </div>
   );

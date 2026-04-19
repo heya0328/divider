@@ -1,16 +1,17 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Paragraph, Spacing, Tab, Button } from '@toss/tds-mobile';
 import { useApp } from '../../context/AppContext';
 import { acceptReward, useReward } from '../../data/rewards';
 import RewardCard from '../../components/RewardCard';
 import EmptyState from '../../components/EmptyState';
 
-type Tab = 'received' | 'sent';
+type TabType = 'received' | 'sent';
 
 export default function Rewards() {
   const { rewards, dispatch } = useApp();
   const navigate = useNavigate();
-  const [tab, setTab] = useState<Tab>('received');
+  const [tab, setTab] = useState<TabType>('received');
 
   const handleAccept = async (rewardId: string) => {
     try {
@@ -33,53 +34,23 @@ export default function Rewards() {
   const currentList = tab === 'received' ? rewards.received : rewards.sent;
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb', paddingBottom: '80px' }}>
+    <div style={{ minHeight: '100vh', paddingBottom: '80px' }}>
       {/* Header */}
-      <div
-        style={{
-          backgroundColor: '#ffffff',
-          padding: '20px 16px 0',
-          borderBottom: '1px solid #e5e7eb',
-        }}
-      >
-        <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#111827', marginBottom: '16px' }}>
-          보상
-        </h1>
+      <div style={{ padding: '20px 16px 0', borderBottom: '1px solid #e5e7eb' }}>
+        <Paragraph typography="t3" fontWeight="bold" color="#111827">
+          <Paragraph.Text>보상</Paragraph.Text>
+        </Paragraph>
+        <Spacing size={16} />
+
         {/* Tabs */}
-        <div style={{ display: 'flex' }}>
-          <button
-            onClick={() => setTab('received')}
-            style={{
-              flex: 1,
-              padding: '12px 0',
-              border: 'none',
-              backgroundColor: 'transparent',
-              cursor: 'pointer',
-              fontSize: '15px',
-              fontWeight: 600,
-              color: tab === 'received' ? '#3b82f6' : '#9ca3af',
-              borderBottom: `2px solid ${tab === 'received' ? '#3b82f6' : 'transparent'}`,
-            }}
-          >
+        <Tab onChange={(index) => setTab(index === 0 ? 'received' : 'sent')}>
+          <Tab.Item selected={tab === 'received'}>
             받은 선물
-          </button>
-          <button
-            onClick={() => setTab('sent')}
-            style={{
-              flex: 1,
-              padding: '12px 0',
-              border: 'none',
-              backgroundColor: 'transparent',
-              cursor: 'pointer',
-              fontSize: '15px',
-              fontWeight: 600,
-              color: tab === 'sent' ? '#3b82f6' : '#9ca3af',
-              borderBottom: `2px solid ${tab === 'sent' ? '#3b82f6' : 'transparent'}`,
-            }}
-          >
+          </Tab.Item>
+          <Tab.Item selected={tab === 'sent'}>
             보낸 선물
-          </button>
-        </div>
+          </Tab.Item>
+        </Tab>
       </div>
 
       <div style={{ padding: '16px' }}>
@@ -114,40 +85,26 @@ export default function Rewards() {
           alignItems: 'center',
         }}
       >
-        <button
+        <Button
+          size="medium"
+          color="light"
+          variant="weak"
+          display="full"
           onClick={() => navigate('/home')}
-          style={{
-            flex: 1,
-            border: 'none',
-            backgroundColor: 'transparent',
-            cursor: 'pointer',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '2px',
-            color: '#9ca3af',
-          }}
+          style={{ flex: 1, flexDirection: 'column', gap: '2px', border: 'none' }}
         >
-          <span style={{ fontSize: '20px' }}>🏠</span>
-          <span style={{ fontSize: '11px', fontWeight: 500 }}>홈</span>
-        </button>
-        <button
+          홈
+        </Button>
+        <Button
+          size="medium"
+          color="primary"
+          variant="weak"
+          display="full"
           onClick={() => navigate('/rewards')}
-          style={{
-            flex: 1,
-            border: 'none',
-            backgroundColor: 'transparent',
-            cursor: 'pointer',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '2px',
-            color: '#3b82f6',
-          }}
+          style={{ flex: 1, flexDirection: 'column', gap: '2px', border: 'none' }}
         >
-          <span style={{ fontSize: '20px' }}>🎁</span>
-          <span style={{ fontSize: '11px', fontWeight: 600 }}>보상</span>
-        </button>
+          보상
+        </Button>
       </div>
     </div>
   );

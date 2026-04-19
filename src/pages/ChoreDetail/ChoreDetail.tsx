@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { Paragraph, Spacing, Badge, Button, TableRow } from '@toss/tds-mobile';
 import { useApp } from '../../context/AppContext';
 import {
   acceptDraftChore,
@@ -21,6 +22,15 @@ const STATUS_LABELS: Record<ChoreStatus, string> = {
   completed: '완료',
 };
 
+const STATUS_COLORS: Record<ChoreStatus, 'blue' | 'teal' | 'green' | 'red' | 'yellow' | 'elephant'> = {
+  draft: 'elephant',
+  pending: 'blue',
+  in_progress: 'blue',
+  help_requested: 'yellow',
+  reassigned: 'blue',
+  completed: 'green',
+};
+
 export default function ChoreDetail() {
   const { id } = useParams<{ id: string }>();
   const { user, partner, chores, dispatch } = useApp();
@@ -32,8 +42,10 @@ export default function ChoreDetail() {
 
   if (!user || !chore) {
     return (
-      <div style={{ padding: '24px', textAlign: 'center', color: '#6b7280' }}>
-        할 일을 찾을 수 없어요
+      <div style={{ padding: '24px', textAlign: 'center' }}>
+        <Paragraph typography="t5" color="#6b7280" textAlign="center">
+          <Paragraph.Text>할 일을 찾을 수 없어요</Paragraph.Text>
+        </Paragraph>
       </div>
     );
   }
@@ -113,11 +125,10 @@ export default function ChoreDetail() {
     });
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb' }}>
+    <div style={{ minHeight: '100vh' }}>
       {/* Header */}
       <div
         style={{
-          backgroundColor: '#ffffff',
           padding: '20px 16px 16px',
           borderBottom: '1px solid #e5e7eb',
           display: 'flex',
@@ -125,66 +136,51 @@ export default function ChoreDetail() {
           gap: '12px',
         }}
       >
-        <button
+        <Button
+          size="small"
+          color="light"
+          variant="weak"
           onClick={() => navigate('/home')}
-          style={{
-            border: 'none',
-            backgroundColor: 'transparent',
-            cursor: 'pointer',
-            fontSize: '20px',
-            padding: 0,
-          }}
         >
-          ←
-        </button>
-        <h1 style={{ fontSize: '18px', fontWeight: 700, color: '#111827', margin: 0 }}>
-          할 일 상세
-        </h1>
+          &larr;
+        </Button>
+        <Paragraph typography="t4" fontWeight="bold" color="#111827">
+          <Paragraph.Text>할 일 상세</Paragraph.Text>
+        </Paragraph>
       </div>
 
       <div style={{ padding: '24px 16px' }}>
-        {/* Chore info card */}
-        <div
-          style={{
-            backgroundColor: '#ffffff',
-            borderRadius: '16px',
-            border: '1px solid #e5e7eb',
-            padding: '20px',
-            marginBottom: '24px',
-          }}
-        >
-          <h2 style={{ fontSize: '22px', fontWeight: 700, color: '#111827', marginBottom: '16px' }}>
-            {chore.title}
-          </h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: '#6b7280', fontSize: '14px' }}>상태</span>
-              <span
-                style={{
-                  fontSize: '13px',
-                  padding: '2px 10px',
-                  borderRadius: '12px',
-                  backgroundColor: chore.status === 'help_requested' ? '#fed7aa' : '#f3f4f6',
-                  color: chore.status === 'help_requested' ? '#c2410c' : '#374151',
-                  fontWeight: 600,
-                }}
-              >
+        {/* Chore title */}
+        <Paragraph typography="t3" fontWeight="bold" color="#111827">
+          <Paragraph.Text>{chore.title}</Paragraph.Text>
+        </Paragraph>
+
+        <Spacing size={20} />
+
+        {/* Info rows */}
+        <div style={{ backgroundColor: '#ffffff', borderRadius: '16px', border: '1px solid #e5e7eb', overflow: 'hidden' }}>
+          <TableRow
+            align="space-between"
+            left="상태"
+            right={
+              <Badge size="small" variant="fill" color={STATUS_COLORS[chore.status]}>
                 {STATUS_LABELS[chore.status]}
-              </span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: '#6b7280', fontSize: '14px' }}>담당자</span>
-              <span style={{ fontSize: '14px', fontWeight: 500, color: '#111827' }}>{assigneeName}</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: '#6b7280', fontSize: '14px' }}>마감일</span>
-              <span style={{ fontSize: '14px', fontWeight: 500, color: '#111827' }}>{chore.due_date}</span>
-            </div>
-          </div>
+              </Badge>
+            }
+          />
+          <TableRow align="space-between" left="담당자" right={assigneeName} />
+          <TableRow align="space-between" left="마감일" right={chore.due_date} />
         </div>
 
+        <Spacing size={24} />
+
         {error && (
-          <p style={{ color: '#dc2626', fontSize: '14px', marginBottom: '12px' }}>{error}</p>
+          <>
+            <Paragraph typography="t7" color="#dc2626">
+              <Paragraph.Text>{error}</Paragraph.Text>
+            </Paragraph>
+            <Spacing size={12} />
+          </>
         )}
 
         {/* Conditional action buttons */}
@@ -192,116 +188,115 @@ export default function ChoreDetail() {
           {/* draft + needs my approval */}
           {needsMyApproval && (
             <>
-              <button
+              <Button
+                size="xlarge"
+                display="full"
+                color="primary"
+                variant="fill"
                 onClick={handleAcceptDraft}
                 disabled={loading}
-                style={primaryButtonStyle(loading)}
+                loading={loading}
               >
                 수락하기
-              </button>
-              <button
+              </Button>
+              <Button
+                size="xlarge"
+                display="full"
+                color="light"
+                variant="weak"
                 onClick={handleRejectDraft}
                 disabled={loading}
-                style={secondaryButtonStyle(loading)}
               >
                 괜찮아요, 다음에
-              </button>
+              </Button>
             </>
           )}
 
           {/* pending + my chore */}
           {chore.status === 'pending' && isMyChore && (
-            <button
+            <Button
+              size="xlarge"
+              display="full"
+              color="primary"
+              variant="fill"
               onClick={handleStart}
               disabled={loading}
-              style={primaryButtonStyle(loading)}
+              loading={loading}
             >
               시작하기
-            </button>
+            </Button>
           )}
 
           {/* in_progress + my chore */}
           {chore.status === 'in_progress' && isMyChore && (
             <>
-              <button
+              <Button
+                size="xlarge"
+                display="full"
+                color="primary"
+                variant="fill"
                 onClick={handleComplete}
                 disabled={loading}
-                style={primaryButtonStyle(loading)}
+                loading={loading}
               >
                 완료했어요
-              </button>
-              <button
+              </Button>
+              <Button
+                size="xlarge"
+                display="full"
+                color="light"
+                variant="weak"
                 onClick={handleRequestHelp}
                 disabled={loading}
-                style={secondaryButtonStyle(loading)}
               >
                 오늘 이 일, 도움 받을래요
-              </button>
+              </Button>
             </>
           )}
 
-          {/* help_requested + partner's chore (partner needs help, I can take over) */}
+          {/* help_requested + partner's chore */}
           {chore.status === 'help_requested' && isPartnerChore && (
             <>
-              <button
+              <Button
+                size="xlarge"
+                display="full"
+                color="primary"
+                variant="fill"
                 onClick={handleTakeOver}
                 disabled={loading}
-                style={primaryButtonStyle(loading)}
+                loading={loading}
               >
                 내가 대신할게
-              </button>
-              <button
+              </Button>
+              <Button
+                size="xlarge"
+                display="full"
+                color="light"
+                variant="weak"
                 onClick={handleDeclineHelp}
                 disabled={loading}
-                style={secondaryButtonStyle(loading)}
               >
                 괜찮아요, 다음에
-              </button>
+              </Button>
             </>
           )}
 
-          {/* reassigned + my chore (I took it over) */}
+          {/* reassigned + my chore */}
           {chore.status === 'reassigned' && isMyChore && (
-            <button
+            <Button
+              size="xlarge"
+              display="full"
+              color="primary"
+              variant="fill"
               onClick={handleComplete}
               disabled={loading}
-              style={primaryButtonStyle(loading)}
+              loading={loading}
             >
               완료했어요
-            </button>
+            </Button>
           )}
         </div>
       </div>
     </div>
   );
-}
-
-function primaryButtonStyle(disabled: boolean): React.CSSProperties {
-  return {
-    width: '100%',
-    padding: '16px',
-    borderRadius: '12px',
-    backgroundColor: '#3b82f6',
-    color: '#ffffff',
-    border: 'none',
-    fontSize: '16px',
-    fontWeight: 700,
-    cursor: disabled ? 'not-allowed' : 'pointer',
-    opacity: disabled ? 0.5 : 1,
-  };
-}
-
-function secondaryButtonStyle(disabled: boolean): React.CSSProperties {
-  return {
-    width: '100%',
-    padding: '16px',
-    borderRadius: '12px',
-    backgroundColor: '#f3f4f6',
-    color: '#374151',
-    border: 'none',
-    fontSize: '16px',
-    fontWeight: 600,
-    cursor: disabled ? 'not-allowed' : 'pointer',
-    opacity: disabled ? 0.5 : 1,
-  };
 }

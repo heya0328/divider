@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { Paragraph, Spacing, TextField, Button, ListRow } from '@toss/tds-mobile';
 import { useApp } from '../../context/AppContext';
 import { createReward } from '../../data/rewards';
 import { REWARD_TEMPLATES } from '../../constants';
@@ -17,8 +18,10 @@ export default function Thanks() {
 
   if (!user || !partner || !choreId) {
     return (
-      <div style={{ padding: '24px', textAlign: 'center', color: '#6b7280' }}>
-        파트너 정보가 없어요
+      <div style={{ padding: '24px', textAlign: 'center' }}>
+        <Paragraph typography="t5" color="#6b7280" textAlign="center">
+          <Paragraph.Text>파트너 정보가 없어요</Paragraph.Text>
+        </Paragraph>
       </div>
     );
   }
@@ -48,148 +51,117 @@ export default function Thanks() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb' }}>
+    <div style={{ minHeight: '100vh', paddingBottom: '100px' }}>
       {/* Header */}
-      <div
-        style={{
-          backgroundColor: '#ffffff',
-          padding: '20px 16px 16px',
-          borderBottom: '1px solid #e5e7eb',
-        }}
-      >
-        <h1 style={{ fontSize: '18px', fontWeight: 700, color: '#111827', margin: 0 }}>
-          감사 선물 보내기
-        </h1>
+      <div style={{ padding: '20px 16px 16px', borderBottom: '1px solid #e5e7eb' }}>
+        <Paragraph typography="t4" fontWeight="bold" color="#111827">
+          <Paragraph.Text>감사 선물 보내기</Paragraph.Text>
+        </Paragraph>
       </div>
 
       <div style={{ padding: '24px 16px' }}>
         {/* Gratitude message */}
-        <div
-          style={{
-            textAlign: 'center',
-            marginBottom: '32px',
-          }}
-        >
-          <div style={{ fontSize: '64px', marginBottom: '12px' }}>🙏</div>
-          <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#111827', marginBottom: '8px' }}>
-            파트너가 해줬어요!
-          </h2>
-          <p style={{ fontSize: '15px', color: '#6b7280' }}>
-            {partner.nickname}님에게 감사의 선물을 보내세요
-          </p>
+        <div style={{ textAlign: 'center' }}>
+          <Paragraph typography="t1" textAlign="center">
+            <Paragraph.Text style={{ fontSize: '64px' }}>&#x1F64F;</Paragraph.Text>
+          </Paragraph>
+          <Spacing size={12} />
+          <Paragraph typography="t3" fontWeight="bold" color="#111827" textAlign="center">
+            <Paragraph.Text>파트너가 해줬어요!</Paragraph.Text>
+          </Paragraph>
+          <Spacing size={8} />
+          <Paragraph typography="t6" color="#6b7280" textAlign="center">
+            <Paragraph.Text>{partner.nickname}님에게 감사의 선물을 보내세요</Paragraph.Text>
+          </Paragraph>
         </div>
+
+        <Spacing size={32} />
 
         {/* Template rewards */}
-        <div style={{ marginBottom: '16px' }}>
-          <p style={{ fontSize: '14px', fontWeight: 600, color: '#374151', marginBottom: '12px' }}>
-            선물 고르기
-          </p>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-            {REWARD_TEMPLATES.map((template) => (
-              <button
-                key={template.key}
-                onClick={() => {
-                  setSelectedKey(template.key);
-                  setUseCustom(false);
-                }}
-                style={{
-                  padding: '16px 12px',
-                  borderRadius: '12px',
-                  border: '2px solid',
-                  borderColor:
-                    !useCustom && selectedKey === template.key ? '#3b82f6' : '#e5e7eb',
-                  backgroundColor:
-                    !useCustom && selectedKey === template.key ? '#eff6ff' : '#ffffff',
-                  cursor: 'pointer',
-                  textAlign: 'center',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: '4px',
-                }}
-              >
-                <span style={{ fontSize: '28px' }}>{template.emoji}</span>
-                <span
-                  style={{
-                    fontSize: '13px',
-                    fontWeight: 600,
-                    color:
-                      !useCustom && selectedKey === template.key ? '#3b82f6' : '#374151',
-                  }}
-                >
-                  {template.label}
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
+        <Paragraph typography="t6" fontWeight="semibold" color="#374151">
+          <Paragraph.Text>선물 고르기</Paragraph.Text>
+        </Paragraph>
+        <Spacing size={12} />
+
+        {REWARD_TEMPLATES.map((template) => {
+          const isSelected = !useCustom && selectedKey === template.key;
+          return (
+            <ListRow
+              key={template.key}
+              onClick={() => {
+                setSelectedKey(template.key);
+                setUseCustom(false);
+              }}
+              left={<span style={{ fontSize: 28 }}>{template.emoji}</span>}
+              contents={
+                <ListRow.Texts
+                  type="1RowTypeA"
+                  top={template.label}
+                />
+              }
+              right={
+                isSelected ? (
+                  <Paragraph typography="t7" color="#3b82f6" fontWeight="bold">
+                    <Paragraph.Text>&#x2713;</Paragraph.Text>
+                  </Paragraph>
+                ) : undefined
+              }
+              border="indented"
+            />
+          );
+        })}
+
+        <Spacing size={16} />
 
         {/* Custom input */}
-        <div style={{ marginBottom: '24px' }}>
-          <button
-            onClick={() => {
-              setUseCustom(true);
-              setSelectedKey(null);
-            }}
-            style={{
-              width: '100%',
-              padding: '12px',
-              borderRadius: '10px',
-              border: '2px solid',
-              borderColor: useCustom ? '#3b82f6' : '#e5e7eb',
-              backgroundColor: useCustom ? '#eff6ff' : '#ffffff',
-              cursor: 'pointer',
-              textAlign: 'left',
-              fontSize: '14px',
-              fontWeight: 600,
-              color: useCustom ? '#3b82f6' : '#374151',
-              marginBottom: '8px',
-            }}
-          >
-            직접 입력하기 ✏️
-          </button>
-          {useCustom && (
-            <input
-              type="text"
-              value={customText}
-              onChange={(e) => setCustomText(e.target.value)}
-              placeholder="어떤 선물을 보낼까요?"
-              style={{
-                width: '100%',
-                padding: '12px',
-                borderRadius: '10px',
-                border: '1.5px solid #e5e7eb',
-                fontSize: '15px',
-                outline: 'none',
-                boxSizing: 'border-box',
-                backgroundColor: '#ffffff',
-              }}
-            />
-          )}
-        </div>
-
-        {error && (
-          <p style={{ color: '#dc2626', fontSize: '14px', marginBottom: '12px' }}>{error}</p>
-        )}
-
-        <button
-          onClick={handleSubmit}
-          disabled={loading || !canSubmit}
-          style={{
-            width: '100%',
-            padding: '16px',
-            borderRadius: '12px',
-            backgroundColor: '#3b82f6',
-            color: '#ffffff',
-            border: 'none',
-            fontSize: '16px',
-            fontWeight: 700,
-            cursor: loading || !canSubmit ? 'not-allowed' : 'pointer',
-            opacity: loading || !canSubmit ? 0.5 : 1,
+        <Button
+          size="large"
+          display="full"
+          color={useCustom ? 'primary' : 'light'}
+          variant={useCustom ? 'fill' : 'weak'}
+          onClick={() => {
+            setUseCustom(true);
+            setSelectedKey(null);
           }}
         >
+          직접 입력하기
+        </Button>
+
+        {useCustom && (
+          <>
+            <Spacing size={8} />
+            <TextField
+              variant="box"
+              label="직접 입력"
+              placeholder="어떤 선물을 보낼까요?"
+              value={customText}
+              onChange={(e) => setCustomText(e.target.value)}
+            />
+          </>
+        )}
+
+        {error && (
+          <>
+            <Spacing size={12} />
+            <Paragraph typography="t7" color="#dc2626">
+              <Paragraph.Text>{error}</Paragraph.Text>
+            </Paragraph>
+          </>
+        )}
+      </div>
+
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px' }}>
+        <Button
+          size="xlarge"
+          display="full"
+          color="primary"
+          variant="fill"
+          onClick={handleSubmit}
+          disabled={loading || !canSubmit}
+          loading={loading}
+        >
           {loading ? '전송 중...' : '마음 전하기'}
-        </button>
+        </Button>
       </div>
     </div>
   );

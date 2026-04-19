@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Paragraph } from '@toss/tds-mobile';
 import { useAuth } from './hooks/useAuth';
 import { useBackEvent } from './hooks/useBackEvent';
 import { AppProvider } from './context/AppContext';
@@ -34,15 +35,19 @@ export default function App() {
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <p>로딩 중...</p>
+        <Paragraph typography="t5" color="#6b7280" textAlign="center">
+          <Paragraph.Text>로딩 중...</Paragraph.Text>
+        </Paragraph>
       </div>
     );
   }
 
   if (error || !user) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', padding: '24px', textAlign: 'center' }}>
-        <p style={{ color: '#FF6B6B' }}>{error || '로그인이 필요해요'}</p>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', padding: '24px' }}>
+        <Paragraph typography="t5" color="#dc2626" textAlign="center">
+          <Paragraph.Text>{error || '로그인이 필요해요'}</Paragraph.Text>
+        </Paragraph>
       </div>
     );
   }

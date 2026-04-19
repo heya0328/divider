@@ -1,5 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Paragraph, Spacing, Badge, Button } from '@toss/tds-mobile';
 import { useApp } from '../../context/AppContext';
 import ChoreCard from '../../components/ChoreCard';
 import EmptyState from '../../components/EmptyState';
@@ -9,9 +10,13 @@ export default function Home() {
   const { user, partner, chores, refreshData } = useApp();
   const navigate = useNavigate();
 
-  useEffect(() => {
+  const loadData = useCallback(() => {
     refreshData();
   }, [refreshData]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   if (!user) return null;
 
@@ -41,27 +46,27 @@ export default function Home() {
   );
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb', paddingBottom: '80px' }}>
+    <div style={{ minHeight: '100vh', paddingBottom: '80px' }}>
       {/* Header */}
-      <div
-        style={{
-          backgroundColor: '#ffffff',
-          padding: '20px 16px 16px',
-          borderBottom: '1px solid #e5e7eb',
-        }}
-      >
-        <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#111827', margin: 0 }}>
-          안녕하세요, {user.nickname}님 👋
-        </h1>
+      <div style={{ padding: '20px 16px 16px', borderBottom: '1px solid #e5e7eb' }}>
+        <Paragraph typography="t3" fontWeight="bold" color="#111827">
+          <Paragraph.Text>안녕하세요, {user.nickname}님</Paragraph.Text>
+        </Paragraph>
       </div>
 
       <div style={{ padding: '16px' }}>
         {/* 수락 대기 중 */}
         {pendingApproval.length > 0 && (
-          <section style={{ marginBottom: '24px' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: 600, color: '#374151', marginBottom: '12px' }}>
-              수락 대기 중
-            </h2>
+          <section>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Paragraph typography="t5" fontWeight="semibold" color="#374151">
+                <Paragraph.Text>수락 대기 중</Paragraph.Text>
+              </Paragraph>
+              <Badge size="small" variant="fill" color="red">
+                {pendingApproval.length}
+              </Badge>
+            </div>
+            <Spacing size={12} />
             {pendingApproval.map((chore) => (
               <ChoreCard
                 key={chore.id}
@@ -71,16 +76,18 @@ export default function Home() {
                 onClick={() => navigate(`/chore/${chore.id}`)}
               />
             ))}
+            <Spacing size={24} />
           </section>
         )}
 
         {/* 내 할 일 */}
-        <section style={{ marginBottom: '24px' }}>
-          <h2 style={{ fontSize: '16px', fontWeight: 600, color: '#374151', marginBottom: '12px' }}>
-            내 할 일
-          </h2>
+        <section>
+          <Paragraph typography="t5" fontWeight="semibold" color="#374151">
+            <Paragraph.Text>내 할 일</Paragraph.Text>
+          </Paragraph>
+          <Spacing size={12} />
           {myChores.length === 0 ? (
-            <EmptyState message="할 일이 없어요 🎉" />
+            <EmptyState message="할 일이 없어요" />
           ) : (
             myChores.map((chore) => (
               <ChoreCard
@@ -92,13 +99,15 @@ export default function Home() {
               />
             ))
           )}
+          <Spacing size={24} />
         </section>
 
         {/* 파트너 할 일 */}
-        <section style={{ marginBottom: '24px' }}>
-          <h2 style={{ fontSize: '16px', fontWeight: 600, color: '#374151', marginBottom: '12px' }}>
-            파트너 할 일
-          </h2>
+        <section>
+          <Paragraph typography="t5" fontWeight="semibold" color="#374151">
+            <Paragraph.Text>파트너 할 일</Paragraph.Text>
+          </Paragraph>
+          <Spacing size={12} />
           {partnerChores.length === 0 ? (
             <EmptyState message={partner ? '파트너에게 할 일이 없어요' : '파트너와 연결해주세요'} />
           ) : (
@@ -116,7 +125,10 @@ export default function Home() {
       </div>
 
       {/* FAB */}
-      <button
+      <Button
+        size="large"
+        color="primary"
+        variant="fill"
         onClick={() => navigate('/chore/create')}
         style={{
           position: 'fixed',
@@ -125,20 +137,13 @@ export default function Home() {
           width: '56px',
           height: '56px',
           borderRadius: '28px',
-          backgroundColor: '#3b82f6',
-          color: '#ffffff',
-          border: 'none',
-          fontSize: '28px',
-          fontWeight: 400,
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
+          padding: 0,
+          minWidth: 'unset',
           boxShadow: '0 4px 12px rgba(59, 130, 246, 0.4)',
         }}
       >
         +
-      </button>
+      </Button>
 
       {/* Bottom Tab Bar */}
       <div
@@ -154,40 +159,26 @@ export default function Home() {
           alignItems: 'center',
         }}
       >
-        <button
+        <Button
+          size="medium"
+          color="primary"
+          variant="weak"
+          display="full"
           onClick={() => navigate('/home')}
-          style={{
-            flex: 1,
-            border: 'none',
-            backgroundColor: 'transparent',
-            cursor: 'pointer',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '2px',
-            color: '#3b82f6',
-          }}
+          style={{ flex: 1, flexDirection: 'column', gap: '2px', border: 'none' }}
         >
-          <span style={{ fontSize: '20px' }}>🏠</span>
-          <span style={{ fontSize: '11px', fontWeight: 600 }}>홈</span>
-        </button>
-        <button
+          홈
+        </Button>
+        <Button
+          size="medium"
+          color="light"
+          variant="weak"
+          display="full"
           onClick={() => navigate('/rewards')}
-          style={{
-            flex: 1,
-            border: 'none',
-            backgroundColor: 'transparent',
-            cursor: 'pointer',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '2px',
-            color: '#9ca3af',
-          }}
+          style={{ flex: 1, flexDirection: 'column', gap: '2px', border: 'none' }}
         >
-          <span style={{ fontSize: '20px' }}>🎁</span>
-          <span style={{ fontSize: '11px', fontWeight: 500 }}>보상</span>
-        </button>
+          보상
+        </Button>
       </div>
     </div>
   );

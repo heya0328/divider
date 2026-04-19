@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Paragraph, Spacing, TextField, Button } from '@toss/tds-mobile';
 import { useApp } from '../../context/AppContext';
 import { createChore } from '../../data/chores';
 
@@ -14,6 +15,31 @@ export default function ChoreCreate() {
   const [error, setError] = useState<string | null>(null);
 
   if (!user) return null;
+
+  // Check if user has matched with a partner
+  if (!user.couple_id) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+        <Paragraph typography="t4" fontWeight="bold" color="#111827" textAlign="center">
+          <Paragraph.Text>파트너와 먼저 연결해주세요</Paragraph.Text>
+        </Paragraph>
+        <Spacing size={12} />
+        <Paragraph typography="t6" color="#6b7280" textAlign="center">
+          <Paragraph.Text>할 일을 만들려면 파트너와 연결이 필요해요</Paragraph.Text>
+        </Paragraph>
+        <Spacing size={24} />
+        <Button
+          size="large"
+          display="block"
+          color="primary"
+          variant="fill"
+          onClick={() => navigate('/onboarding/create')}
+        >
+          파트너 연결하러 가기
+        </Button>
+      </div>
+    );
+  }
 
   const effectiveAssigneeId = assigneeId || user.id;
 
@@ -39,11 +65,10 @@ export default function ChoreCreate() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb' }}>
+    <div style={{ minHeight: '100vh', paddingBottom: '100px' }}>
       {/* Header */}
       <div
         style={{
-          backgroundColor: '#ffffff',
           padding: '20px 16px 16px',
           borderBottom: '1px solid #e5e7eb',
           display: 'flex',
@@ -51,160 +76,106 @@ export default function ChoreCreate() {
           gap: '12px',
         }}
       >
-        <button
+        <Button
+          size="small"
+          color="light"
+          variant="weak"
           onClick={() => navigate('/home')}
-          style={{
-            border: 'none',
-            backgroundColor: 'transparent',
-            cursor: 'pointer',
-            fontSize: '20px',
-            padding: 0,
-          }}
         >
-          ←
-        </button>
-        <h1 style={{ fontSize: '18px', fontWeight: 700, color: '#111827', margin: 0 }}>
-          할 일 추가
-        </h1>
+          &larr;
+        </Button>
+        <Paragraph typography="t4" fontWeight="bold" color="#111827">
+          <Paragraph.Text>할 일 추가</Paragraph.Text>
+        </Paragraph>
       </div>
 
       <div style={{ padding: '24px 16px' }}>
         {/* Title */}
-        <div style={{ marginBottom: '20px' }}>
-          <label
-            style={{
-              display: 'block',
-              fontSize: '14px',
-              fontWeight: 600,
-              color: '#374151',
-              marginBottom: '8px',
-            }}
-          >
-            할 일 이름
-          </label>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="예: 설거지하기"
-            style={{
-              width: '100%',
-              padding: '12px',
-              borderRadius: '10px',
-              border: '1.5px solid #e5e7eb',
-              fontSize: '15px',
-              outline: 'none',
-              boxSizing: 'border-box',
-              backgroundColor: '#ffffff',
-            }}
-          />
-        </div>
+        <TextField
+          variant="box"
+          label="할 일 이름"
+          placeholder="예: 설거지, 빨래, 청소기 돌리기"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
+
+        <Spacing size={20} />
 
         {/* Assignee */}
-        <div style={{ marginBottom: '20px' }}>
-          <label
-            style={{
-              display: 'block',
-              fontSize: '14px',
-              fontWeight: 600,
-              color: '#374151',
-              marginBottom: '8px',
-            }}
+        <Paragraph typography="t6" fontWeight="semibold" color="#374151">
+          <Paragraph.Text>담당자</Paragraph.Text>
+        </Paragraph>
+        <Spacing size={8} />
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <Button
+            size="large"
+            display="full"
+            color={effectiveAssigneeId === user.id ? 'primary' : 'light'}
+            variant={effectiveAssigneeId === user.id ? 'fill' : 'weak'}
+            onClick={() => setAssigneeId(user.id)}
+            style={{ flex: 1 }}
           >
-            담당자
-          </label>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <button
-              onClick={() => setAssigneeId(user.id)}
-              style={{
-                flex: 1,
-                padding: '12px',
-                borderRadius: '10px',
-                border: '2px solid',
-                borderColor: effectiveAssigneeId === user.id ? '#3b82f6' : '#e5e7eb',
-                backgroundColor: effectiveAssigneeId === user.id ? '#eff6ff' : '#ffffff',
-                color: effectiveAssigneeId === user.id ? '#3b82f6' : '#374151',
-                fontWeight: 600,
-                cursor: 'pointer',
-                fontSize: '15px',
-              }}
+            나
+          </Button>
+          {partner && (
+            <Button
+              size="large"
+              display="full"
+              color={effectiveAssigneeId === partner.id ? 'primary' : 'light'}
+              variant={effectiveAssigneeId === partner.id ? 'fill' : 'weak'}
+              onClick={() => setAssigneeId(partner.id)}
+              style={{ flex: 1 }}
             >
-              나
-            </button>
-            {partner && (
-              <button
-                onClick={() => setAssigneeId(partner.id)}
-                style={{
-                  flex: 1,
-                  padding: '12px',
-                  borderRadius: '10px',
-                  border: '2px solid',
-                  borderColor: effectiveAssigneeId === partner.id ? '#3b82f6' : '#e5e7eb',
-                  backgroundColor: effectiveAssigneeId === partner.id ? '#eff6ff' : '#ffffff',
-                  color: effectiveAssigneeId === partner.id ? '#3b82f6' : '#374151',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  fontSize: '15px',
-                }}
-              >
-                {partner.nickname}
-              </button>
-            )}
-          </div>
+              {partner.nickname}
+            </Button>
+          )}
         </div>
+
+        <Spacing size={20} />
 
         {/* Due Date */}
-        <div style={{ marginBottom: '32px' }}>
-          <label
-            style={{
-              display: 'block',
-              fontSize: '14px',
-              fontWeight: 600,
-              color: '#374151',
-              marginBottom: '8px',
-            }}
-          >
-            마감일
-          </label>
-          <input
-            type="date"
-            value={dueDate}
-            onChange={(e) => setDueDate(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '12px',
-              borderRadius: '10px',
-              border: '1.5px solid #e5e7eb',
-              fontSize: '15px',
-              outline: 'none',
-              boxSizing: 'border-box',
-              backgroundColor: '#ffffff',
-            }}
-          />
-        </div>
-
-        {error && (
-          <p style={{ color: '#dc2626', fontSize: '14px', marginBottom: '12px' }}>{error}</p>
-        )}
-
-        <button
-          onClick={handleSubmit}
-          disabled={loading || !title.trim() || !dueDate}
+        <Paragraph typography="t6" fontWeight="semibold" color="#374151">
+          <Paragraph.Text>마감일</Paragraph.Text>
+        </Paragraph>
+        <Spacing size={8} />
+        <input
+          type="date"
+          value={dueDate}
+          onChange={(e) => setDueDate(e.target.value)}
           style={{
             width: '100%',
-            padding: '16px',
-            borderRadius: '12px',
-            backgroundColor: '#3b82f6',
-            color: '#ffffff',
-            border: 'none',
-            fontSize: '16px',
-            fontWeight: 700,
-            cursor: loading || !title.trim() || !dueDate ? 'not-allowed' : 'pointer',
-            opacity: loading || !title.trim() || !dueDate ? 0.5 : 1,
+            padding: '12px',
+            borderRadius: '10px',
+            border: '1.5px solid #e5e7eb',
+            fontSize: '15px',
+            outline: 'none',
+            boxSizing: 'border-box',
+            backgroundColor: '#ffffff',
           }}
+        />
+
+        {error && (
+          <>
+            <Spacing size={12} />
+            <Paragraph typography="t7" color="#dc2626">
+              <Paragraph.Text>{error}</Paragraph.Text>
+            </Paragraph>
+          </>
+        )}
+      </div>
+
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px' }}>
+        <Button
+          size="xlarge"
+          display="full"
+          color="primary"
+          variant="fill"
+          onClick={handleSubmit}
+          disabled={loading || !title.trim() || !dueDate}
+          loading={loading}
         >
-          {loading ? '추가 중...' : '할 일 추가하기'}
-        </button>
+          {loading ? '추가 중...' : '등록하기'}
+        </Button>
       </div>
     </div>
   );

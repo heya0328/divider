@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Paragraph, Spacing, Button } from '@toss/tds-mobile';
 import { useApp } from '../../context/AppContext';
 import { useShare } from '../../hooks/useShare';
 import { createInviteCode } from '../../data/couples';
@@ -6,6 +8,7 @@ import type { Couple } from '../../types';
 
 export default function CreateCode() {
   const { user } = useApp();
+  const navigate = useNavigate();
   const { shareMessage } = useShare();
   const [couple, setCouple] = useState<Couple | null>(null);
   const [loading, setLoading] = useState(false);
@@ -32,93 +35,78 @@ export default function CreateCode() {
   };
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        backgroundColor: '#f9fafb',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-      }}
-    >
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
       <div style={{ maxWidth: '400px', width: '100%', textAlign: 'center' }}>
-        <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#111827', marginBottom: '8px' }}>
-          파트너를 초대하세요
-        </h1>
-        <p style={{ fontSize: '15px', color: '#6b7280', marginBottom: '32px' }}>
-          초대코드를 만들어 파트너에게 공유해요
-        </p>
+        <Paragraph typography="t3" fontWeight="bold" color="#111827" textAlign="center">
+          <Paragraph.Text>파트너를 초대하세요</Paragraph.Text>
+        </Paragraph>
+        <Spacing size={8} />
+        <Paragraph typography="t6" color="#6b7280" textAlign="center">
+          <Paragraph.Text>초대코드를 만들어 파트너에게 공유해요</Paragraph.Text>
+        </Paragraph>
+        <Spacing size={32} />
 
         {!couple ? (
-          <button
+          <Button
+            size="xlarge"
+            display="full"
+            color="primary"
+            variant="fill"
             onClick={handleCreateCode}
             disabled={loading}
-            style={{
-              width: '100%',
-              padding: '16px',
-              borderRadius: '12px',
-              backgroundColor: '#3b82f6',
-              color: '#ffffff',
-              border: 'none',
-              fontSize: '16px',
-              fontWeight: 700,
-              cursor: loading ? 'not-allowed' : 'pointer',
-              opacity: loading ? 0.7 : 1,
-            }}
+            loading={loading}
           >
             {loading ? '생성 중...' : '초대코드 만들기'}
-          </button>
+          </Button>
         ) : (
-          <div>
-            <div
-              style={{
-                backgroundColor: '#ffffff',
-                border: '1px solid #e5e7eb',
-                borderRadius: '16px',
-                padding: '32px',
-                marginBottom: '16px',
-              }}
-            >
-              <p style={{ fontSize: '13px', color: '#9ca3af', marginBottom: '8px' }}>초대코드</p>
-              <div
-                style={{
-                  fontSize: '36px',
-                  fontWeight: 800,
-                  color: '#111827',
-                  letterSpacing: '6px',
-                  fontFamily: 'monospace',
-                }}
-              >
-                {couple.invite_code}
-              </div>
+          <>
+            <div style={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '16px', padding: '32px' }}>
+              <Paragraph typography="t7" color="#9ca3af" textAlign="center">
+                <Paragraph.Text>초대코드</Paragraph.Text>
+              </Paragraph>
+              <Spacing size={8} />
+              <Paragraph typography="t1" fontWeight="bold" color="#111827" textAlign="center">
+                <Paragraph.Text style={{ letterSpacing: '6px', fontFamily: 'monospace' }}>
+                  {couple.invite_code}
+                </Paragraph.Text>
+              </Paragraph>
             </div>
-            <p style={{ fontSize: '13px', color: '#f59e0b', marginBottom: '16px' }}>
-              ⏰ 24시간 내에 입력해야 해요
-            </p>
-            <button
+            <Spacing size={16} />
+            <Paragraph typography="t7" color="#f59e0b" textAlign="center">
+              <Paragraph.Text>24시간 내에 입력해야 해요</Paragraph.Text>
+            </Paragraph>
+            <Spacing size={16} />
+            <Button
+              size="xlarge"
+              display="full"
+              color="primary"
+              variant="fill"
               onClick={handleShare}
-              style={{
-                width: '100%',
-                padding: '16px',
-                borderRadius: '12px',
-                backgroundColor: '#10b981',
-                color: '#ffffff',
-                border: 'none',
-                fontSize: '16px',
-                fontWeight: 700,
-                cursor: 'pointer',
-              }}
             >
               코드 공유하기
-            </button>
-          </div>
+            </Button>
+          </>
         )}
 
         {error && (
-          <p style={{ color: '#dc2626', fontSize: '14px', marginTop: '12px' }}>{error}</p>
+          <>
+            <Spacing size={12} />
+            <Paragraph typography="t7" color="#dc2626" textAlign="center">
+              <Paragraph.Text>{error}</Paragraph.Text>
+            </Paragraph>
+          </>
         )}
+
+        <Spacing size={16} />
+        <Button
+          size="large"
+          display="full"
+          color="light"
+          variant="fill"
+          onClick={() => navigate('/onboarding/enter')}
+        >
+          이미 코드가 있어요
+        </Button>
       </div>
     </div>
   );
