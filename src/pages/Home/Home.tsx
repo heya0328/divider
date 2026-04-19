@@ -33,10 +33,10 @@ export default function Home() {
     c => c.status === 'draft' && c.assignee_id === user.id && c.created_by_id !== user.id
   );
   const myChores = chores.filter(
-    c => c.assignee_id === user.id && c.status !== 'draft' && c.status !== 'completed'
+    c => c.assignee_id === user.id && c.status !== 'draft'
   );
   const partnerChores = chores.filter(
-    c => partner && c.assignee_id === partner.id && c.status !== 'draft' && c.status !== 'completed'
+    c => partner && c.assignee_id === partner.id && c.status !== 'draft'
   );
   const needsThanks = chores.filter(
     c => c.status === 'completed' && c.original_assignee_id === user.id &&
@@ -59,7 +59,9 @@ export default function Home() {
     }
   };
 
-  const totalActive = myChores.length + partnerChores.length + pendingApproval.length;
+  const totalActive = myChores.filter(c => c.status !== 'completed').length
+    + partnerChores.filter(c => c.status !== 'completed').length
+    + pendingApproval.length;
 
   return (
     <div style={{ minHeight: '100vh', paddingBottom: '80px' }}>
