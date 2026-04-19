@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Paragraph, Spacing, TextField, Button } from '@toss/tds-mobile';
+import { Paragraph, Spacing, TextField, Button, ListRow } from '@toss/tds-mobile';
 import { useApp } from '../../context/AppContext';
 import { createChore } from '../../data/chores';
 
@@ -9,14 +9,13 @@ export default function ChoreCreate() {
   const navigate = useNavigate();
 
   const [title, setTitle] = useState('');
-  const [assigneeId, setAssigneeId] = useState<string>('');
+  const [assigneeId, setAssigneeId] = useState<string>(user?.id ?? '');
   const [dueDate, setDueDate] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   if (!user) return null;
 
-  // Check if user has matched with a partner
   if (!user.couple_id) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
@@ -28,23 +27,15 @@ export default function ChoreCreate() {
           <Paragraph.Text>할 일을 만들려면 파트너와 연결이 필요해요</Paragraph.Text>
         </Paragraph>
         <Spacing size={24} />
-        <Button
-          size="large"
-          display="block"
-          color="primary"
-          variant="fill"
-          onClick={() => navigate('/onboarding/create')}
-        >
+        <Button size="large" color="primary" variant="fill" onClick={() => navigate('/onboarding/create')}>
           파트너 연결하러 가기
         </Button>
       </div>
     );
   }
 
-  const effectiveAssigneeId = assigneeId || user.id;
-
   const handleSubmit = async () => {
-    if (!title.trim() || !dueDate || !user.couple_id) return;
+    if (!title.trim() || !user.couple_id) return;
     setLoading(true);
     setError(null);
     try {
@@ -52,8 +43,8 @@ export default function ChoreCreate() {
         couple_id: user.couple_id,
         title: title.trim(),
         created_by_id: user.id,
-        assignee_id: effectiveAssigneeId,
-        due_date: dueDate,
+        assignee_id: assigneeId,
+        due_date: dueDate || undefined,
       });
       dispatch({ type: 'ADD_CHORE', payload: chore });
       navigate('/home');
@@ -67,22 +58,9 @@ export default function ChoreCreate() {
   return (
     <div style={{ minHeight: '100vh', paddingBottom: '100px' }}>
       {/* Header */}
-      <div
-        style={{
-          padding: '20px 16px 16px',
-          borderBottom: '1px solid #e5e7eb',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px',
-        }}
-      >
-        <Button
-          size="small"
-          color="light"
-          variant="weak"
-          onClick={() => navigate('/home')}
-        >
-          &larr;
+      <div style={{ padding: '20px 16px 16px', borderBottom: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <Button size="small" color="light" variant="weak" onClick={() => navigate('/home')}>
+          ←
         </Button>
         <Paragraph typography="t4" fontWeight="bold" color="#111827">
           <Paragraph.Text>할 일 추가</Paragraph.Text>
@@ -99,43 +77,46 @@ export default function ChoreCreate() {
           onChange={(e) => setTitle(e.target.value)}
         />
 
-        <Spacing size={20} />
+        <Spacing size={24} />
 
-        {/* Assignee */}
+        {/* Assignee Selection */}
         <Paragraph typography="t6" fontWeight="semibold" color="#374151">
-          <Paragraph.Text>담당자</Paragraph.Text>
+          <Paragraph.Text>누가 할까요?</Paragraph.Text>
         </Paragraph>
         <Spacing size={8} />
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <Button
-            size="large"
-            display="full"
-            color={effectiveAssigneeId === user.id ? 'primary' : 'light'}
-            variant={effectiveAssigneeId === user.id ? 'fill' : 'weak'}
+
+        <div style={{ border: '1px solid #e5e7eb', borderRadius: '12px', overflow: 'hidden' }}>
+          <ListRow
             onClick={() => setAssigneeId(user.id)}
-            style={{ flex: 1 }}
-          >
-            나
-          </Button>
+            left={
+              <div style={{ width: '24px', height: '24px', borderRadius: '12px', border: `2px solid ${assigneeId === user.id ? '#3182f6' : '#d1d5db'}`, backgroundColor: assigneeId === user.id ? '#3182f6' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '14px' }}>
+                {assigneeId === user.id ? '✓' : ''}
+              </div>
+            }
+            contents={
+              <ListRow.Texts type="2RowTypeA" top="나" bottom="내가 직접 할게요" />
+            }
+          />
           {partner && (
-            <Button
-              size="large"
-              display="full"
-              color={effectiveAssigneeId === partner.id ? 'primary' : 'light'}
-              variant={effectiveAssigneeId === partner.id ? 'fill' : 'weak'}
+            <ListRow
               onClick={() => setAssigneeId(partner.id)}
-              style={{ flex: 1 }}
-            >
-              {partner.nickname}
-            </Button>
+              left={
+                <div style={{ width: '24px', height: '24px', borderRadius: '12px', border: `2px solid ${assigneeId === partner.id ? '#3182f6' : '#d1d5db'}`, backgroundColor: assigneeId === partner.id ? '#3182f6' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '14px' }}>
+                  {assigneeId === partner.id ? '✓' : ''}
+                </div>
+              }
+              contents={
+                <ListRow.Texts type="2RowTypeA" top={partner.nickname} bottom="파트너에게 요청해요" />
+              }
+            />
           )}
         </div>
 
-        <Spacing size={20} />
+        <Spacing size={24} />
 
-        {/* Due Date */}
+        {/* Due Date (optional) */}
         <Paragraph typography="t6" fontWeight="semibold" color="#374151">
-          <Paragraph.Text>마감일</Paragraph.Text>
+          <Paragraph.Text>마감일 (선택)</Paragraph.Text>
         </Paragraph>
         <Spacing size={8} />
         <input
@@ -151,8 +132,17 @@ export default function ChoreCreate() {
             outline: 'none',
             boxSizing: 'border-box',
             backgroundColor: '#ffffff',
+            color: dueDate ? '#111827' : '#9ca3af',
           }}
         />
+        {dueDate && (
+          <>
+            <Spacing size={4} />
+            <Button size="small" color="light" variant="weak" onClick={() => setDueDate('')}>
+              마감일 삭제
+            </Button>
+          </>
+        )}
 
         {error && (
           <>
@@ -164,17 +154,18 @@ export default function ChoreCreate() {
         )}
       </div>
 
-      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px' }}>
+      {/* Submit Button */}
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px', backgroundColor: '#fff' }}>
         <Button
           size="xlarge"
           display="full"
           color="primary"
           variant="fill"
           onClick={handleSubmit}
-          disabled={loading || !title.trim() || !dueDate}
+          disabled={loading || !title.trim()}
           loading={loading}
         >
-          {loading ? '추가 중...' : '등록하기'}
+          등록하기
         </Button>
       </div>
     </div>

@@ -29,7 +29,7 @@ export interface Chore {
   assignee_id: string;
   original_assignee_id: string;
   status: ChoreStatus;
-  due_date: string;
+  due_date: string | null;
   completed_by_id: string | null;
   completed_at: string | null;
   created_at: string;
@@ -69,7 +69,7 @@ export interface CreateChoreInput {
   title: string;
   created_by_id: string;
   assignee_id: string;
-  due_date: string;
+  due_date?: string;
 }
 
 export interface CreateRewardInput {

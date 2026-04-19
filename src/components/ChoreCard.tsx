@@ -28,12 +28,14 @@ const STATUS_COLORS: Record<ChoreStatus, 'blue' | 'teal' | 'green' | 'red' | 'ye
 
 export default function ChoreCard({ chore, currentUser, partner, onClick }: ChoreCardProps) {
   const today = new Date().toISOString().split('T')[0];
-  const isOverdue = chore.due_date < today && chore.status !== 'completed';
+  const isOverdue = chore.due_date != null && chore.due_date < today && chore.status !== 'completed';
 
   const assigneeName =
     chore.assignee_id === currentUser.id
       ? '나'
       : partner?.nickname ?? '파트너';
+
+  const dueDateText = chore.due_date ? ` · ${chore.due_date}` : '';
 
   return (
     <ListRow
@@ -42,7 +44,7 @@ export default function ChoreCard({ chore, currentUser, partner, onClick }: Chor
         <ListRow.Texts
           type="2RowTypeA"
           top={chore.title}
-          bottom={`담당: ${assigneeName} · ${chore.due_date}`}
+          bottom={`담당: ${assigneeName}${dueDateText}`}
         />
       }
       right={

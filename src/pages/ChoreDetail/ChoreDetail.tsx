@@ -169,7 +169,7 @@ export default function ChoreDetail() {
             }
           />
           <TableRow align="space-between" left="담당자" right={assigneeName} />
-          <TableRow align="space-between" left="마감일" right={chore.due_date} />
+          <TableRow align="space-between" left="마감일" right={chore.due_date ?? '없음'} />
         </div>
 
         <Spacing size={24} />

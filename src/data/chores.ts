@@ -12,8 +12,14 @@ export async function getChoresByCouple(coupleId: string): Promise<Chore[]> {
   return (data ?? []) as Chore[];
 }
 
-/** Create a new chore in 'draft' status */
+/**
+ * Create a new chore.
+ * - 나에게 할당: 바로 'pending' (수락 불필요)
+ * - 파트너에게 할당: 'draft' (파트너 수락 필요)
+ */
 export async function createChore(input: CreateChoreInput): Promise<Chore> {
+  const isSelfAssigned = input.created_by_id === input.assignee_id;
+
   const { data, error } = await supabase
     .from('chores')
     .insert({
@@ -22,8 +28,8 @@ export async function createChore(input: CreateChoreInput): Promise<Chore> {
       created_by_id: input.created_by_id,
       assignee_id: input.assignee_id,
       original_assignee_id: input.assignee_id,
-      status: 'draft',
-      due_date: input.due_date,
+      status: isSelfAssigned ? 'pending' : 'draft',
+      due_date: input.due_date || null,
     })
     .select('*')
     .single();
