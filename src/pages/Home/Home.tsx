@@ -1,15 +1,15 @@
 import { useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Paragraph, Spacing, Badge, Button } from '@toss/tds-mobile';
+import { Paragraph, Spacing, Badge, Button, SegmentedControl, ListRow } from '@toss/tds-mobile';
 import { useApp } from '../../context/AppContext';
-import { revertToInProgress } from '../../data/chores';
+import { revertToInProgress, completeChore } from '../../data/chores';
 import { expireOldHelpRequests } from '../../data/helpRequests';
 import ChoreCard from '../../components/ChoreCard';
 import EmptyState from '../../components/EmptyState';
 import type { Chore } from '../../types';
 
 export default function Home() {
-  const { user, partner, chores, refreshData } = useApp();
+  const { user, partner, chores, dispatch, refreshData } = useApp();
   const navigate = useNavigate();
 
   // 로드 시 만료된 도움 요청 자동 처리
@@ -68,6 +68,15 @@ export default function Home() {
       c.completed_by_id !== user.id
   );
 
+  const handleCompleteChore = async (chore: Chore) => {
+    try {
+      const updated = await completeChore(chore.id, user.id);
+      dispatch({ type: 'UPDATE_CHORE', payload: updated });
+    } catch {
+      // Silently fail — user can retry via detail page
+    }
+  };
+
   return (
     <div style={{ minHeight: '100vh', paddingBottom: '80px' }}>
       {/* Header */}
@@ -102,23 +111,25 @@ export default function Home() {
             </div>
             <Spacing size={8} />
             {needsThanks.map((chore) => (
-              <div
+              <ListRow
                 key={chore.id}
                 onClick={() => navigate(`/thanks/${chore.id}`)}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '12px',
-                  padding: '14px 16px', cursor: 'pointer', borderBottom: '1px solid #f3f4f6',
-                  backgroundColor: '#eff6ff', borderRadius: '8px', marginBottom: '4px',
-                }}
-              >
-                <span style={{ fontSize: '20px' }}>🙏</span>
-                <div style={{ flex: 1 }}>
+                withArrow
+                withTouchEffect
+                border="none"
+                left={<span style={{ fontSize: '20px' }}>🙏</span>}
+                contents={
                   <Paragraph typography="t6" fontWeight="medium" color="#111827">
                     <Paragraph.Text>{partner?.nickname ?? '파트너'}님이 '{chore.title}'을 해줬어요</Paragraph.Text>
                   </Paragraph>
-                </div>
-                <span style={{ color: '#3182f6', fontSize: '13px', fontWeight: 600 }}>감사 보내기 ›</span>
-              </div>
+                }
+                right={
+                  <Paragraph typography="t7" color="#3182f6" fontWeight="semibold">
+                    <Paragraph.Text>감사 보내기</Paragraph.Text>
+                  </Paragraph>
+                }
+                style={{ backgroundColor: '#eff6ff', borderRadius: '8px', marginBottom: '4px' }}
+              />
             ))}
             <Spacing size={24} />
           </section>
@@ -165,6 +176,7 @@ export default function Home() {
                 currentUser={user}
                 partner={partner}
                 onClick={() => navigate(`/chore/${chore.id}`)}
+                onComplete={() => handleCompleteChore(chore)}
               />
             ))
           )}
@@ -221,33 +233,15 @@ export default function Home() {
           bottom: 0,
           left: 0,
           right: 0,
-          height: '64px',
-          backgroundColor: '#ffffff',
+          backgroundColor: '#fff',
           borderTop: '1px solid #e5e7eb',
-          display: 'flex',
-          alignItems: 'center',
+          padding: '8px 16px',
         }}
       >
-        <Button
-          size="medium"
-          color="primary"
-          variant="weak"
-          display="full"
-          onClick={() => navigate('/home')}
-          style={{ flex: 1, flexDirection: 'column', gap: '2px', border: 'none' }}
-        >
-          홈
-        </Button>
-        <Button
-          size="medium"
-          color="light"
-          variant="weak"
-          display="full"
-          onClick={() => navigate('/rewards')}
-          style={{ flex: 1, flexDirection: 'column', gap: '2px', border: 'none' }}
-        >
-          보상
-        </Button>
+        <SegmentedControl value="home" onChange={(v) => { if (v === 'rewards') navigate('/rewards'); }}>
+          <SegmentedControl.Item value="home">홈</SegmentedControl.Item>
+          <SegmentedControl.Item value="rewards">보상</SegmentedControl.Item>
+        </SegmentedControl>
       </div>
     </div>
   );

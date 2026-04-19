@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Paragraph, Spacing, Tab, Button } from '@toss/tds-mobile';
+import { Paragraph, Spacing, Tab, SegmentedControl } from '@toss/tds-mobile';
 import { useApp } from '../../context/AppContext';
 import { acceptReward, useReward } from '../../data/rewards';
 import RewardCard from '../../components/RewardCard';
@@ -82,20 +82,21 @@ export default function Rewards() {
       </div>
 
       {/* Bottom Tab Bar */}
-      <div style={{
-        position: 'fixed', bottom: 0, left: 0, right: 0, height: '64px',
-        backgroundColor: '#ffffff', borderTop: '1px solid #e5e7eb', display: 'flex', alignItems: 'center',
-      }}>
-        <Button size="medium" color="light" variant="weak" display="full"
-          onClick={() => navigate('/home')}
-          style={{ flex: 1, border: 'none' }}>
-          홈
-        </Button>
-        <Button size="medium" color="primary" variant="weak" display="full"
-          onClick={() => navigate('/rewards')}
-          style={{ flex: 1, border: 'none' }}>
-          보상
-        </Button>
+      <div
+        style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          backgroundColor: '#fff',
+          borderTop: '1px solid #e5e7eb',
+          padding: '8px 16px',
+        }}
+      >
+        <SegmentedControl value="rewards" onChange={(v) => { if (v === 'home') navigate('/home'); }}>
+          <SegmentedControl.Item value="home">홈</SegmentedControl.Item>
+          <SegmentedControl.Item value="rewards">보상</SegmentedControl.Item>
+        </SegmentedControl>
       </div>
     </div>
   );

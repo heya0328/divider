@@ -1,4 +1,4 @@
-import { Paragraph, Badge } from '@toss/tds-mobile';
+import { Paragraph, Badge, ListRow, Checkbox, Spacing } from '@toss/tds-mobile';
 import type { Chore, ChoreStatus, User } from '../types';
 import { REWARD_TEMPLATES } from '../constants';
 
@@ -7,6 +7,7 @@ interface ChoreCardProps {
   currentUser: User;
   partner: User | null;
   onClick: () => void;
+  onComplete?: () => void;
 }
 
 const STATUS_LABELS: Record<ChoreStatus, string> = {
@@ -27,7 +28,7 @@ const STATUS_COLORS: Record<ChoreStatus, 'blue' | 'teal' | 'green' | 'red' | 'ye
   completed: 'green',
 };
 
-export default function ChoreCard({ chore, currentUser, partner, onClick }: ChoreCardProps) {
+export default function ChoreCard({ chore, currentUser, partner, onClick, onComplete }: ChoreCardProps) {
   const today = new Date().toISOString().split('T')[0];
   const isOverdue = chore.due_date != null && chore.due_date < today && chore.status !== 'completed';
   const isCompleted = chore.status === 'completed';
@@ -49,61 +50,67 @@ export default function ChoreCard({ chore, currentUser, partner, onClick }: Chor
     return '🎁';
   })();
 
+  const canComplete = !isCompleted && onComplete && chore.assignee_id === currentUser.id &&
+    (chore.status === 'in_progress' || chore.status === 'reassigned');
+
   return (
-    <div
+    <ListRow
       onClick={onClick}
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '12px',
-        padding: '14px 16px',
-        cursor: 'pointer',
-        borderBottom: '1px solid #f3f4f6',
-      }}
-    >
-      {/* Checkbox */}
-      <div style={{
-        width: '24px',
-        height: '24px',
-        borderRadius: '6px',
-        border: `2px solid ${isCompleted ? '#3182f6' : isOverdue ? '#ef4444' : '#d1d5db'}`,
-        backgroundColor: isCompleted ? '#3182f6' : 'transparent',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexShrink: 0,
-      }}>
-        {isCompleted && <span style={{ color: '#fff', fontSize: '14px', lineHeight: 1 }}>✓</span>}
-      </div>
-
-      {/* Content */}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <Paragraph typography="t6" fontWeight="medium" color={isCompleted ? '#9ca3af' : '#111827'}>
-          <Paragraph.Text style={isCompleted ? { textDecoration: 'line-through' } : undefined}>
-            {chore.title}
-          </Paragraph.Text>
-        </Paragraph>
-        <Paragraph typography="t7" color="#9ca3af">
-          <Paragraph.Text>{assigneeName}{dueDateText}{rewardLabel ? ` ${rewardLabel}` : ''}</Paragraph.Text>
-        </Paragraph>
-      </div>
-
-      {/* Status Badge */}
-      <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
-        {!isCompleted && (
-          <Badge size="small" variant="weak" color={STATUS_COLORS[chore.status]}>
-            {STATUS_LABELS[chore.status]}
-          </Badge>
-        )}
-        {isOverdue && (
-          <Badge size="small" variant="fill" color="red">
-            기한 초과
-          </Badge>
-        )}
-      </div>
-
-      {/* Arrow */}
-      <span style={{ color: '#d1d5db', fontSize: '16px', flexShrink: 0 }}>›</span>
-    </div>
+      withArrow
+      withTouchEffect
+      border="none"
+      left={
+        <div
+          onClick={(e) => {
+            if (canComplete) {
+              e.stopPropagation();
+              onComplete();
+            }
+          }}
+        >
+          <Checkbox.Circle
+            checked={isCompleted}
+            size={24}
+            onCheckedChange={() => {
+              if (canComplete) {
+                onComplete();
+              }
+            }}
+            readOnly={!canComplete}
+          />
+        </div>
+      }
+      contents={
+        <ListRow.Texts
+          type="2RowTypeA"
+          top={
+            <Paragraph typography="t6" fontWeight="medium" color={isCompleted ? '#9ca3af' : '#111827'}>
+              <Paragraph.Text style={isCompleted ? { textDecoration: 'line-through' } : undefined}>
+                {chore.title}
+              </Paragraph.Text>
+            </Paragraph>
+          }
+          bottom={
+            <Paragraph typography="t7" color="#9ca3af">
+              <Paragraph.Text>{assigneeName}{dueDateText}{rewardLabel ? ` ${rewardLabel}` : ''}</Paragraph.Text>
+            </Paragraph>
+          }
+        />
+      }
+      right={
+        <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+          {!isCompleted && (
+            <Badge size="small" variant="weak" color={STATUS_COLORS[chore.status]}>
+              {STATUS_LABELS[chore.status]}
+            </Badge>
+          )}
+          {isOverdue && (
+            <Badge size="small" variant="fill" color="red">
+              기한 초과
+            </Badge>
+          )}
+        </div>
+      }
+    />
   );
 }

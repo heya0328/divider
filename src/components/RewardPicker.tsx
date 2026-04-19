@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Paragraph, Spacing, TextField, Button } from '@toss/tds-mobile';
+import { Paragraph, Spacing, TextField, Button, Checkbox, ListRow } from '@toss/tds-mobile';
 import { REWARD_TEMPLATES } from '../constants';
 
 interface RewardPickerProps {
@@ -104,58 +104,60 @@ export default function RewardPicker({ onSelect, optional = true }: RewardPicker
         {REWARD_TEMPLATES.map((template) => {
           const isSelected = !useCustom && selectedKey === template.key;
           return (
-            <div
+            <ListRow
               key={template.key}
               onClick={() => handleSelectTemplate(template.key)}
+              withTouchEffect
+              border="none"
+              verticalPadding="small"
+              horizontalPadding="small"
+              left={<span style={{ fontSize: '22px', flexShrink: 0 }}>{template.emoji}</span>}
+              contents={
+                <Paragraph typography="t6" fontWeight={isSelected ? 'semibold' : 'medium'} color={isSelected ? '#3182f6' : '#111827'}>
+                  <Paragraph.Text>{template.label}</Paragraph.Text>
+                </Paragraph>
+              }
+              right={
+                <Checkbox.Circle
+                  inputType="radio"
+                  checked={isSelected}
+                  onCheckedChange={() => handleSelectTemplate(template.key)}
+                  size={20}
+                />
+              }
               style={{
-                display: 'flex', alignItems: 'center', gap: '12px',
-                padding: '13px 16px', cursor: 'pointer',
                 backgroundColor: isSelected ? '#eff6ff' : '#fff',
                 borderBottom: '1px solid #f3f4f6',
               }}
-            >
-              <span style={{ fontSize: '22px', flexShrink: 0 }}>{template.emoji}</span>
-              <Paragraph typography="t6" fontWeight={isSelected ? 'semibold' : 'medium'} color={isSelected ? '#3182f6' : '#111827'}>
-                <Paragraph.Text>{template.label}</Paragraph.Text>
-              </Paragraph>
-              <div style={{ marginLeft: 'auto', flexShrink: 0 }}>
-                <div style={{
-                  width: '20px', height: '20px', borderRadius: '10px',
-                  border: `2px solid ${isSelected ? '#3182f6' : '#d1d5db'}`,
-                  backgroundColor: isSelected ? '#3182f6' : 'transparent',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>
-                  {isSelected && <span style={{ color: '#fff', fontSize: '11px' }}>✓</span>}
-                </div>
-              </div>
-            </div>
+            />
           );
         })}
 
         {/* Custom */}
-        <div
+        <ListRow
           onClick={handleSelectCustom}
+          withTouchEffect
+          border="none"
+          verticalPadding="small"
+          horizontalPadding="small"
+          left={<span style={{ fontSize: '22px', flexShrink: 0 }}>✍️</span>}
+          contents={
+            <Paragraph typography="t6" fontWeight={useCustom ? 'semibold' : 'medium'} color={useCustom ? '#3182f6' : '#111827'}>
+              <Paragraph.Text>직접 입력</Paragraph.Text>
+            </Paragraph>
+          }
+          right={
+            <Checkbox.Circle
+              inputType="radio"
+              checked={useCustom}
+              onCheckedChange={handleSelectCustom}
+              size={20}
+            />
+          }
           style={{
-            display: 'flex', alignItems: 'center', gap: '12px',
-            padding: '13px 16px', cursor: 'pointer',
             backgroundColor: useCustom ? '#eff6ff' : '#fff',
           }}
-        >
-          <span style={{ fontSize: '22px', flexShrink: 0 }}>✍️</span>
-          <Paragraph typography="t6" fontWeight={useCustom ? 'semibold' : 'medium'} color={useCustom ? '#3182f6' : '#111827'}>
-            <Paragraph.Text>직접 입력</Paragraph.Text>
-          </Paragraph>
-          <div style={{ marginLeft: 'auto', flexShrink: 0 }}>
-            <div style={{
-              width: '20px', height: '20px', borderRadius: '10px',
-              border: `2px solid ${useCustom ? '#3182f6' : '#d1d5db'}`,
-              backgroundColor: useCustom ? '#3182f6' : 'transparent',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              {useCustom && <span style={{ color: '#fff', fontSize: '11px' }}>✓</span>}
-            </div>
-          </div>
-        </div>
+        />
       </div>
 
       {useCustom && (
