@@ -30,6 +30,9 @@ export async function createChore(input: CreateChoreInput): Promise<Chore> {
       original_assignee_id: input.assignee_id,
       status: isSelfAssigned ? 'pending' : 'draft',
       due_date: input.due_date || null,
+      proposed_reward_type: input.proposed_reward_type || null,
+      proposed_reward_key: input.proposed_reward_key || null,
+      proposed_reward_text: input.proposed_reward_text || null,
     })
     .select('*')
     .single();
@@ -83,9 +86,18 @@ export async function startChore(choreId: string): Promise<Chore> {
   return updateChoreStatus(choreId, 'in_progress');
 }
 
-/** Assignee requests help → status becomes 'help_requested' */
-export async function requestHelp(choreId: string): Promise<Chore> {
-  return updateChoreStatus(choreId, 'help_requested');
+/** Assignee requests help → status becomes 'help_requested', optionally with reward proposal */
+export async function requestHelp(
+  choreId: string,
+  reward?: { type: 'template' | 'custom'; key?: string; text?: string }
+): Promise<Chore> {
+  const extra: Partial<Chore> = {};
+  if (reward) {
+    extra.proposed_reward_type = reward.type;
+    extra.proposed_reward_key = reward.key || null;
+    extra.proposed_reward_text = reward.text || null;
+  }
+  return updateChoreStatus(choreId, 'help_requested', extra);
 }
 
 /** Mark a chore as completed */

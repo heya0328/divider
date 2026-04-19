@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Paragraph, Spacing, TextField, Button } from '@toss/tds-mobile';
 import { useApp } from '../../context/AppContext';
 import { createChore } from '../../data/chores';
+import RewardPicker from '../../components/RewardPicker';
 
 export default function ChoreCreate() {
   const { user, partner, dispatch } = useApp();
@@ -11,6 +12,7 @@ export default function ChoreCreate() {
   const [title, setTitle] = useState('');
   const [assigneeId, setAssigneeId] = useState<string>(user?.id ?? '');
   const [dueDate, setDueDate] = useState('');
+  const [proposedReward, setProposedReward] = useState<{ type: 'template' | 'custom'; key?: string; text?: string } | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,6 +36,8 @@ export default function ChoreCreate() {
     );
   }
 
+  const isPartnerAssigned = partner != null && assigneeId === partner.id;
+
   const handleSubmit = async () => {
     if (!title.trim() || !user.couple_id) return;
     setLoading(true);
@@ -45,6 +49,9 @@ export default function ChoreCreate() {
         created_by_id: user.id,
         assignee_id: assigneeId,
         due_date: dueDate || undefined,
+        proposed_reward_type: proposedReward?.type,
+        proposed_reward_key: proposedReward?.key,
+        proposed_reward_text: proposedReward?.text,
       });
       dispatch({ type: 'ADD_CHORE', payload: chore });
       navigate('/home');
@@ -68,7 +75,6 @@ export default function ChoreCreate() {
       </div>
 
       <div style={{ padding: '24px 16px' }}>
-        {/* Title */}
         <TextField
           variant="box"
           label="할 일 이름"
@@ -94,27 +100,17 @@ export default function ChoreCreate() {
             return (
               <div
                 key={option.id}
-                onClick={() => setAssigneeId(option.id)}
+                onClick={() => { setAssigneeId(option.id); if (option.id === user.id) setProposedReward(null); }}
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                  padding: '16px',
-                  cursor: 'pointer',
-                  backgroundColor: selected ? '#eff6ff' : '#fff',
-                  borderBottom: '1px solid #f3f4f6',
+                  display: 'flex', alignItems: 'center', gap: '12px', padding: '16px', cursor: 'pointer',
+                  backgroundColor: selected ? '#eff6ff' : '#fff', borderBottom: '1px solid #f3f4f6',
                 }}
               >
                 <div style={{
-                  width: '22px',
-                  height: '22px',
-                  borderRadius: '11px',
+                  width: '22px', height: '22px', borderRadius: '11px',
                   border: `2px solid ${selected ? '#3182f6' : '#d1d5db'}`,
                   backgroundColor: selected ? '#3182f6' : 'transparent',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                 }}>
                   {selected && <span style={{ color: '#fff', fontSize: '12px', lineHeight: 1 }}>✓</span>}
                 </div>
@@ -131,6 +127,22 @@ export default function ChoreCreate() {
           })}
         </div>
 
+        {/* 파트너에게 할당 시 보상 설정 */}
+        {isPartnerAssigned && (
+          <>
+            <Spacing size={24} />
+            <Paragraph typography="t6" fontWeight="semibold" color="#374151">
+              <Paragraph.Text>해주면 이렇게 보답할게요</Paragraph.Text>
+            </Paragraph>
+            <Spacing size={4} />
+            <Paragraph typography="t7" color="#9ca3af">
+              <Paragraph.Text>보상을 설정하면 파트너가 더 기꺼이 수락해요</Paragraph.Text>
+            </Paragraph>
+            <Spacing size={8} />
+            <RewardPicker onSelect={setProposedReward} />
+          </>
+        )}
+
         <Spacing size={24} />
 
         {/* Due Date (optional) */}
@@ -143,14 +155,9 @@ export default function ChoreCreate() {
           value={dueDate}
           onChange={(e) => setDueDate(e.target.value)}
           style={{
-            width: '100%',
-            padding: '12px',
-            borderRadius: '10px',
-            border: '1.5px solid #e5e7eb',
-            fontSize: '15px',
-            outline: 'none',
-            boxSizing: 'border-box',
-            backgroundColor: '#ffffff',
+            width: '100%', padding: '12px', borderRadius: '10px',
+            border: '1.5px solid #e5e7eb', fontSize: '15px', outline: 'none',
+            boxSizing: 'border-box', backgroundColor: '#ffffff',
             color: dueDate ? '#111827' : '#9ca3af',
           }}
         />
@@ -173,17 +180,9 @@ export default function ChoreCreate() {
         )}
       </div>
 
-      {/* Submit Button */}
       <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px', backgroundColor: '#fff' }}>
-        <Button
-          size="xlarge"
-          display="full"
-          color="primary"
-          variant="fill"
-          onClick={handleSubmit}
-          disabled={loading || !title.trim()}
-          loading={loading}
-        >
+        <Button size="xlarge" display="full" color="primary" variant="fill"
+          onClick={handleSubmit} disabled={loading || !title.trim()} loading={loading}>
           등록하기
         </Button>
       </div>

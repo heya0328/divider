@@ -32,6 +32,9 @@ export interface Chore {
   due_date: string | null;
   completed_by_id: string | null;
   completed_at: string | null;
+  proposed_reward_type: RewardType | null;
+  proposed_reward_key: string | null;
+  proposed_reward_text: string | null;
   created_at: string;
 }
 
@@ -70,6 +73,9 @@ export interface CreateChoreInput {
   created_by_id: string;
   assignee_id: string;
   due_date?: string;
+  proposed_reward_type?: RewardType;
+  proposed_reward_key?: string;
+  proposed_reward_text?: string;
 }
 
 export interface CreateRewardInput {

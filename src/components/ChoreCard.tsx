@@ -1,5 +1,6 @@
 import { Paragraph, Badge } from '@toss/tds-mobile';
 import type { Chore, ChoreStatus, User } from '../types';
+import { REWARD_TEMPLATES } from '../constants';
 
 interface ChoreCardProps {
   chore: Chore;
@@ -38,6 +39,16 @@ export default function ChoreCard({ chore, currentUser, partner, onClick }: Chor
 
   const dueDateText = chore.due_date ? ` · ${chore.due_date}` : '';
 
+  // 보상 제안 라벨
+  const rewardLabel = (() => {
+    if (!chore.proposed_reward_type) return null;
+    if (chore.proposed_reward_type === 'template' && chore.proposed_reward_key) {
+      const t = REWARD_TEMPLATES.find(r => r.key === chore.proposed_reward_key);
+      return t ? t.emoji : null;
+    }
+    return '🎁';
+  })();
+
   return (
     <div
       onClick={onClick}
@@ -73,7 +84,7 @@ export default function ChoreCard({ chore, currentUser, partner, onClick }: Chor
           </Paragraph.Text>
         </Paragraph>
         <Paragraph typography="t7" color="#9ca3af">
-          <Paragraph.Text>{assigneeName}{dueDateText}</Paragraph.Text>
+          <Paragraph.Text>{assigneeName}{dueDateText}{rewardLabel ? ` ${rewardLabel}` : ''}</Paragraph.Text>
         </Paragraph>
       </div>
 
