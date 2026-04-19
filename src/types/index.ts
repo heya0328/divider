@@ -2,6 +2,7 @@ export type ChoreStatus = 'draft' | 'pending' | 'in_progress' | 'help_requested'
 export type HelpRequestStatus = 'pending' | 'accepted' | 'declined' | 'expired';
 export type RewardStatus = 'pending' | 'accepted' | 'used';
 export type RewardType = 'template' | 'custom';
+export type RecurrenceType = 'weekly' | 'monthly';
 
 export interface User {
   id: string;
@@ -36,6 +37,7 @@ export interface Chore {
   proposed_reward_key: string | null;
   proposed_reward_text: string | null;
   created_at: string;
+  template_id: string | null;
 }
 
 export interface HelpRequest {
@@ -85,4 +87,36 @@ export interface CreateRewardInput {
   type: RewardType;
   template_key?: string;
   custom_text?: string;
+}
+
+export interface ChoreTemplate {
+  id: string;
+  couple_id: string;
+  title: string;
+  created_by_id: string;
+  assignee_id: string;
+  recurrence_type: RecurrenceType;
+  recurrence_days: number[];
+  monthly_nth: number | null;
+  monthly_weekday: number | null;
+  proposed_reward_type: RewardType | null;
+  proposed_reward_key: string | null;
+  proposed_reward_text: string | null;
+  is_active: boolean;
+  last_generated_date: string | null;
+  created_at: string;
+}
+
+export interface CreateChoreTemplateInput {
+  couple_id: string;
+  title: string;
+  created_by_id: string;
+  assignee_id: string;
+  recurrence_type: RecurrenceType;
+  recurrence_days: number[];
+  monthly_nth?: number;
+  monthly_weekday?: number;
+  proposed_reward_type?: RewardType;
+  proposed_reward_key?: string;
+  proposed_reward_text?: string;
 }

@@ -10,6 +10,8 @@ export const REWARD_TEMPLATES: RewardTemplate[] = [
 
 export const INVITE_CODE_EXPIRY_HOURS = 24;
 export const HELP_REQUEST_EXPIRY_HOURS = 24;
+export const WEEKDAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
+export const NTH_LABELS = ['첫째', '둘째', '셋째', '넷째'];
 
 export const BACK_MAP: Record<string, string | null> = {
   '/home': null,
@@ -18,6 +20,7 @@ export const BACK_MAP: Record<string, string | null> = {
   '/help-request/:id': '/home',
   '/thanks/:id': '/home',
   '/rewards': '/home',
+  '/my': '/home',
   '/onboarding/create': null,
   '/onboarding/enter': null,
 };
