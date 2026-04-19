@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Paragraph, Spacing, TextField, Button, Checkbox, ListRow } from '@toss/tds-mobile';
+import { Spacing, TextField, Button, Checkbox, ListRow, Top, Text, Paragraph } from '@toss/tds-mobile';
+import { adaptive } from '@toss/tds-colors';
 import { useApp } from '../../context/AppContext';
 import { createChore } from '../../data/chores';
 import RewardPicker from '../../components/RewardPicker';

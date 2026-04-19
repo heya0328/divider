@@ -1,4 +1,5 @@
-import { Paragraph, Badge, ListRow, Checkbox, Spacing } from '@toss/tds-mobile';
+import { ListRow } from '@toss/tds-mobile';
+import { adaptive } from '@toss/tds-colors';
 import type { Chore, ChoreStatus, User } from '../types';
 import { REWARD_TEMPLATES } from '../constants';
 
@@ -19,98 +20,85 @@ const STATUS_LABELS: Record<ChoreStatus, string> = {
   completed: '완료',
 };
 
-const STATUS_COLORS: Record<ChoreStatus, 'blue' | 'teal' | 'green' | 'red' | 'yellow' | 'elephant'> = {
-  draft: 'elephant',
-  pending: 'blue',
-  in_progress: 'blue',
-  help_requested: 'yellow',
-  reassigned: 'blue',
-  completed: 'green',
-};
-
 export default function ChoreCard({ chore, currentUser, partner, onClick, onComplete }: ChoreCardProps) {
-  const today = new Date().toISOString().split('T')[0];
-  const isOverdue = chore.due_date != null && chore.due_date < today && chore.status !== 'completed';
   const isCompleted = chore.status === 'completed';
+  const today = new Date().toISOString().split('T')[0];
+  const isOverdue = chore.due_date != null && chore.due_date < today && !isCompleted;
 
-  const assigneeName =
-    chore.assignee_id === currentUser.id
-      ? '나'
-      : partner?.nickname ?? '파트너';
-
-  const dueDateText = chore.due_date ? ` · ${chore.due_date}` : '';
-
-  // 보상 제안 라벨
-  const rewardLabel = (() => {
-    if (!chore.proposed_reward_type) return null;
+  const assigneeName = chore.assignee_id === currentUser.id ? '나' : (partner?.nickname ?? '파트너');
+  const dueDateText = chore.due_date ?? '';
+  const rewardEmoji = (() => {
+    if (!chore.proposed_reward_type) return '';
     if (chore.proposed_reward_type === 'template' && chore.proposed_reward_key) {
       const t = REWARD_TEMPLATES.find(r => r.key === chore.proposed_reward_key);
-      return t ? t.emoji : null;
+      return t ? ` ${t.emoji}` : '';
     }
-    return '🎁';
+    return ' 🎁';
   })();
 
-  const canComplete = !isCompleted && onComplete && chore.assignee_id === currentUser.id &&
+  const canComplete = !isCompleted && onComplete &&
+    chore.assignee_id === currentUser.id &&
     (chore.status === 'in_progress' || chore.status === 'reassigned');
+
+  // 체크 아이콘: 완료 → 파란 체크, 미완료 → 빈 원
+  const checkIconName = isCompleted
+    ? 'icon-check-circle-blue'
+    : 'icon-system-check-circle-outlined';
+  const checkIconColor = isCompleted ? undefined : adaptive.grey300;
+
+  const bottomText = [
+    assigneeName,
+    dueDateText,
+    isOverdue ? '기한 초과' : '',
+    !isCompleted ? STATUS_LABELS[chore.status] : '',
+  ].filter(Boolean).join(' · ') + rewardEmoji;
 
   return (
     <ListRow
-      onClick={onClick}
-      withArrow
-      withTouchEffect
-      border="none"
+      onClick={(e) => {
+        // 체크 아이콘 영역 클릭 시 완료 처리
+        const target = e.target as HTMLElement;
+        if (canComplete && target.closest('[data-check-icon]')) {
+          e.stopPropagation();
+          onComplete!();
+          return;
+        }
+        onClick();
+      }}
       left={
         <div
+          data-check-icon
           onClick={(e) => {
             if (canComplete) {
               e.stopPropagation();
-              onComplete();
+              onComplete!();
             }
           }}
         >
-          <Checkbox.Circle
-            checked={isCompleted}
-            size={24}
-            onCheckedChange={() => {
-              if (canComplete) {
-                onComplete();
-              }
-            }}
-            readOnly={!canComplete}
+          <ListRow.AssetIcon
+            size="xsmall"
+            shape="original"
+            name={checkIconName}
+            color={checkIconColor}
           />
         </div>
       }
       contents={
         <ListRow.Texts
           type="2RowTypeA"
-          top={
-            <Paragraph typography="t6" fontWeight="medium" color={isCompleted ? '#9ca3af' : '#111827'}>
-              <Paragraph.Text style={isCompleted ? { textDecoration: 'line-through' } : undefined}>
-                {chore.title}
-              </Paragraph.Text>
-            </Paragraph>
-          }
-          bottom={
-            <Paragraph typography="t7" color="#9ca3af">
-              <Paragraph.Text>{assigneeName}{dueDateText}{rewardLabel ? ` ${rewardLabel}` : ''}</Paragraph.Text>
-            </Paragraph>
-          }
+          top={chore.title}
+          topProps={{
+            color: isCompleted ? adaptive.grey400 : adaptive.grey800,
+            fontWeight: 'bold',
+          }}
+          bottom={bottomText}
+          bottomProps={{
+            color: isOverdue ? adaptive.red500 : adaptive.grey600,
+          }}
         />
       }
-      right={
-        <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
-          {!isCompleted && (
-            <Badge size="small" variant="weak" color={STATUS_COLORS[chore.status]}>
-              {STATUS_LABELS[chore.status]}
-            </Badge>
-          )}
-          {isOverdue && (
-            <Badge size="small" variant="fill" color="red">
-              기한 초과
-            </Badge>
-          )}
-        </div>
-      }
+      verticalPadding="large"
+      arrowType="right"
     />
   );
 }

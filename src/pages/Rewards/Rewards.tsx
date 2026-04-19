@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Paragraph, Spacing, Tab, SegmentedControl } from '@toss/tds-mobile';
+import { Spacing, Top, Tab, Text, Asset } from '@toss/tds-mobile';
+import { adaptive } from '@toss/tds-colors';
 import { useApp } from '../../context/AppContext';
 import { acceptReward, useReward } from '../../data/rewards';
 import RewardCard from '../../components/RewardCard';
-import EmptyState from '../../components/EmptyState';
 
 type TabType = 'received' | 'sent';
 
@@ -14,18 +14,14 @@ export default function Rewards() {
   const [tab, setTab] = useState<TabType>('received');
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    refreshData();
-  }, [refreshData]);
+  useEffect(() => { refreshData(); }, [refreshData]);
 
   const handleAccept = async (rewardId: string) => {
     setError(null);
     try {
       const updated = await acceptReward(rewardId);
       dispatch({ type: 'UPDATE_REWARD', payload: updated });
-    } catch {
-      setError('수락에 실패했어요. 다시 시도해주세요.');
-    }
+    } catch { setError('수락에 실패했어요.'); }
   };
 
   const handleUse = async (rewardId: string) => {
@@ -33,70 +29,68 @@ export default function Rewards() {
     try {
       const updated = await useReward(rewardId);
       dispatch({ type: 'UPDATE_REWARD', payload: updated });
-    } catch {
-      setError('처리에 실패했어요. 다시 시도해주세요.');
-    }
+    } catch { setError('처리에 실패했어요.'); }
   };
 
   const currentList = tab === 'received' ? rewards.received : rewards.sent;
 
   return (
     <div style={{ minHeight: '100vh', paddingBottom: '80px' }}>
-      {/* Header */}
-      <div style={{ padding: '20px 16px 0', borderBottom: '1px solid #e5e7eb' }}>
-        <Paragraph typography="t3" fontWeight="bold" color="#111827">
-          <Paragraph.Text>감사 선물</Paragraph.Text>
-        </Paragraph>
-        <Spacing size={16} />
+      <Top
+        title={
+          <Top.TitleParagraph size={22} color={adaptive.grey900}>
+            감사 선물
+          </Top.TitleParagraph>
+        }
+      />
+
+      <div style={{ padding: '0 16px' }}>
         <Tab onChange={(index) => setTab(index === 0 ? 'received' : 'sent')}>
           <Tab.Item selected={tab === 'received'}>받은 선물</Tab.Item>
           <Tab.Item selected={tab === 'sent'}>보낸 선물</Tab.Item>
         </Tab>
       </div>
 
-      <div style={{ padding: '16px' }}>
-        {error && (
-          <>
-            <Paragraph typography="t7" color="#dc2626">
-              <Paragraph.Text>{error}</Paragraph.Text>
-            </Paragraph>
-            <Spacing size={12} />
-          </>
-        )}
+      <Spacing size={8} />
 
-        {currentList.length === 0 ? (
-          <EmptyState message={tab === 'received' ? '받은 선물이 없어요' : '보낸 선물이 없어요'} />
-        ) : (
-          <div style={{ border: '1px solid #e5e7eb', borderRadius: '12px', overflow: 'hidden' }}>
-            {currentList.map((reward) => (
-              <RewardCard
-                key={reward.id}
-                reward={reward}
-                isReceived={tab === 'received'}
-                onAccept={() => handleAccept(reward.id)}
-                onUse={() => handleUse(reward.id)}
-              />
-            ))}
-          </div>
-        )}
-      </div>
+      {error && (
+        <div style={{ padding: '8px 16px' }}>
+          <Text color={adaptive.red500} typography="t7">{error}</Text>
+        </div>
+      )}
 
-      {/* Bottom Tab Bar */}
-      <div
-        style={{
-          position: 'fixed',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          backgroundColor: '#fff',
-          borderTop: '1px solid #e5e7eb',
-          padding: '8px 16px',
-        }}
-      >
-        <SegmentedControl value="rewards" onChange={(v) => { if (v === 'home') navigate('/home'); }}>
-          <SegmentedControl.Item value="home">홈</SegmentedControl.Item>
-          <SegmentedControl.Item value="rewards">보상</SegmentedControl.Item>
-        </SegmentedControl>
+      {currentList.length === 0 ? (
+        <div style={{ padding: '48px 16px', textAlign: 'center' }}>
+          <Text color={adaptive.grey400} typography="t6">
+            {tab === 'received' ? '받은 선물이 없어요' : '보낸 선물이 없어요'}
+          </Text>
+        </div>
+      ) : (
+        currentList.map(reward => (
+          <RewardCard
+            key={reward.id}
+            reward={reward}
+            isReceived={tab === 'received'}
+            onAccept={() => handleAccept(reward.id)}
+            onUse={() => handleUse(reward.id)}
+          />
+        ))
+      )}
+
+      {/* Bottom Tab */}
+      <div style={{
+        position: 'fixed', bottom: 0, left: 0, right: 0,
+        display: 'flex', backgroundColor: '#fff', borderTop: `1px solid ${adaptive.grey100}`,
+        padding: '8px 0 4px',
+      }}>
+        <div style={{ flex: 1, textAlign: 'center', cursor: 'pointer' }} onClick={() => navigate('/home')}>
+          <Asset.Icon frameShape={Asset.frameShape.CleanW24} name="icon-home-mono" color={adaptive.grey400} aria-hidden />
+          <Text display="block" color={adaptive.grey600} typography="st13" fontWeight="medium" textAlign="center">홈</Text>
+        </div>
+        <div style={{ flex: 1, textAlign: 'center', cursor: 'pointer' }} onClick={() => navigate('/rewards')}>
+          <Asset.Icon frameShape={Asset.frameShape.CleanW24} name="icon-diamond-mono" color={adaptive.grey800} aria-hidden />
+          <Text display="block" color={adaptive.grey900} typography="st13" fontWeight="medium" textAlign="center">보상</Text>
+        </div>
       </div>
     </div>
   );

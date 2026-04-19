@@ -1,29 +1,23 @@
 import { useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Paragraph, Spacing, Badge, Button, SegmentedControl, ListRow } from '@toss/tds-mobile';
+import { Spacing, Top, List, ListRow, Text, Asset, Button } from '@toss/tds-mobile';
+import { adaptive } from '@toss/tds-colors';
 import { useApp } from '../../context/AppContext';
 import { revertToInProgress, completeChore } from '../../data/chores';
 import { expireOldHelpRequests } from '../../data/helpRequests';
 import ChoreCard from '../../components/ChoreCard';
-import EmptyState from '../../components/EmptyState';
 import type { Chore } from '../../types';
 
 export default function Home() {
   const { user, partner, chores, dispatch, refreshData } = useApp();
   const navigate = useNavigate();
 
-  // 로드 시 만료된 도움 요청 자동 처리
   const loadData = useCallback(async () => {
     await refreshData();
-
-    // help_requested 상태인 chore들의 만료 체크
     for (const c of chores.filter(ch => ch.status === 'help_requested')) {
       const expired = await expireOldHelpRequests(c.id);
-      if (expired) {
-        await revertToInProgress(c.id);
-      }
+      if (expired) await revertToInProgress(c.id);
     }
-    // 만료 처리 후 다시 로드
     await refreshData();
   }, [refreshData, chores]);
 
@@ -34,120 +28,87 @@ export default function Home() {
 
   if (!user) return null;
 
-  // "수락 대기 중": draft chores assigned to me, created by partner
-  const pendingApproval: Chore[] = chores.filter(
-    (c) =>
-      c.status === 'draft' &&
-      c.assignee_id === user.id &&
-      c.created_by_id !== user.id
+  const pendingApproval = chores.filter(
+    c => c.status === 'draft' && c.assignee_id === user.id && c.created_by_id !== user.id
   );
-
-  // "내 할 일": my active chores (not draft, not completed)
-  const myChores: Chore[] = chores.filter(
-    (c) =>
-      c.assignee_id === user.id &&
-      c.status !== 'draft' &&
-      c.status !== 'completed'
+  const myChores = chores.filter(
+    c => c.assignee_id === user.id && c.status !== 'draft' && c.status !== 'completed'
   );
-
-  // "파트너 할 일": partner's active chores (not draft, not completed)
-  const partnerChores: Chore[] = chores.filter(
-    (c) =>
-      partner &&
-      c.assignee_id === partner.id &&
-      c.status !== 'draft' &&
-      c.status !== 'completed'
+  const partnerChores = chores.filter(
+    c => partner && c.assignee_id === partner.id && c.status !== 'draft' && c.status !== 'completed'
   );
-
-  // "감사 전하기": 파트너가 대신 완료한 내 할일 (아직 감사 안 보낸 것)
-  const needsThanks: Chore[] = chores.filter(
-    (c) =>
-      c.status === 'completed' &&
-      c.original_assignee_id === user.id &&
-      c.completed_by_id != null &&
-      c.completed_by_id !== user.id
+  const needsThanks = chores.filter(
+    c => c.status === 'completed' && c.original_assignee_id === user.id &&
+      c.completed_by_id != null && c.completed_by_id !== user.id
   );
 
   const handleCompleteChore = async (chore: Chore) => {
     try {
       const updated = await completeChore(chore.id, user.id);
       dispatch({ type: 'UPDATE_CHORE', payload: updated });
-    } catch {
-      // Silently fail — user can retry via detail page
-    }
+    } catch { /* retry via detail */ }
   };
+
+  const totalActive = myChores.length + partnerChores.length + pendingApproval.length;
 
   return (
     <div style={{ minHeight: '100vh', paddingBottom: '80px' }}>
-      {/* Header */}
-      <div style={{ padding: '20px 16px 16px', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Paragraph typography="t3" fontWeight="bold" color="#111827">
-          <Paragraph.Text>오늘의 우리 집안일</Paragraph.Text>
-        </Paragraph>
-        <Button
-          size="small"
-          color="light"
-          variant="weak"
-          onClick={() => {
+      {/* Title */}
+      <Top
+        title={
+          <Top.TitleParagraph size={22} color={adaptive.grey900}>
+            {`오늘의 우리 집안일 ${totalActive}개`}
+          </Top.TitleParagraph>
+        }
+        right={
+          <Button size="small" color="light" variant="weak" onClick={() => {
             localStorage.removeItem('divider_dev_user_id');
             window.location.href = '/';
-          }}
-        >
-          초기화
-        </Button>
-      </div>
+          }}>
+            초기화
+          </Button>
+        }
+      />
 
-      <div style={{ padding: '16px' }}>
-        {/* 감사 전하기 */}
-        {needsThanks.length > 0 && (
-          <section>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Paragraph typography="t5" fontWeight="semibold" color="#3182f6">
-                <Paragraph.Text>감사를 전해보세요</Paragraph.Text>
-              </Paragraph>
-              <Badge size="small" variant="fill" color="blue">
-                {needsThanks.length}
-              </Badge>
-            </div>
-            <Spacing size={8} />
-            {needsThanks.map((chore) => (
+      {/* 감사 전하기 */}
+      {needsThanks.length > 0 && (
+        <>
+          <Spacing size={8} />
+          <List>
+            {needsThanks.map(chore => (
               <ListRow
                 key={chore.id}
                 onClick={() => navigate(`/thanks/${chore.id}`)}
-                withArrow
-                withTouchEffect
-                border="none"
                 left={<span style={{ fontSize: '20px' }}>🙏</span>}
                 contents={
-                  <Paragraph typography="t6" fontWeight="medium" color="#111827">
-                    <Paragraph.Text>{partner?.nickname ?? '파트너'}님이 '{chore.title}'을 해줬어요</Paragraph.Text>
-                  </Paragraph>
+                  <ListRow.Texts
+                    type="2RowTypeA"
+                    top={`${partner?.nickname ?? '파트너'}님이 대신 해줬어요`}
+                    topProps={{ color: adaptive.blue500, fontWeight: 'bold' }}
+                    bottom={chore.title}
+                    bottomProps={{ color: adaptive.grey600 }}
+                  />
                 }
-                right={
-                  <Paragraph typography="t7" color="#3182f6" fontWeight="semibold">
-                    <Paragraph.Text>감사 보내기</Paragraph.Text>
-                  </Paragraph>
-                }
-                style={{ backgroundColor: '#eff6ff', borderRadius: '8px', marginBottom: '4px' }}
+                arrowType="right"
+                verticalPadding="large"
               />
             ))}
-            <Spacing size={24} />
-          </section>
-        )}
+          </List>
+        </>
+      )}
 
-        {/* 수락 대기 중 */}
-        {pendingApproval.length > 0 && (
-          <section>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Paragraph typography="t5" fontWeight="semibold" color="#374151">
-                <Paragraph.Text>수락 대기 중</Paragraph.Text>
-              </Paragraph>
-              <Badge size="small" variant="fill" color="red">
-                {pendingApproval.length}
-              </Badge>
-            </div>
-            <Spacing size={12} />
-            {pendingApproval.map((chore) => (
+      {/* 수락 대기 중 */}
+      {pendingApproval.length > 0 && (
+        <>
+          <Spacing size={16} />
+          <div style={{ padding: '0 16px' }}>
+            <Text color={adaptive.red500} typography="t6" fontWeight="semibold">
+              수락 대기 중 {pendingApproval.length}
+            </Text>
+          </div>
+          <Spacing size={4} />
+          <List>
+            {pendingApproval.map(chore => (
               <ChoreCard
                 key={chore.id}
                 chore={chore}
@@ -156,92 +117,101 @@ export default function Home() {
                 onClick={() => navigate(`/chore/${chore.id}`)}
               />
             ))}
-            <Spacing size={24} />
-          </section>
-        )}
+          </List>
+        </>
+      )}
 
-        {/* 내 할 일 */}
-        <section>
-          <Paragraph typography="t5" fontWeight="semibold" color="#374151">
-            <Paragraph.Text>내 할 일</Paragraph.Text>
-          </Paragraph>
-          <Spacing size={12} />
-          {myChores.length === 0 ? (
-            <EmptyState message="할 일이 없어요" />
-          ) : (
-            myChores.map((chore) => (
-              <ChoreCard
-                key={chore.id}
-                chore={chore}
-                currentUser={user}
-                partner={partner}
-                onClick={() => navigate(`/chore/${chore.id}`)}
-                onComplete={() => handleCompleteChore(chore)}
-              />
-            ))
-          )}
-          <Spacing size={24} />
-        </section>
-
-        {/* 파트너 할 일 */}
-        <section>
-          <Paragraph typography="t5" fontWeight="semibold" color="#374151">
-            <Paragraph.Text>파트너 할 일</Paragraph.Text>
-          </Paragraph>
-          <Spacing size={12} />
-          {partnerChores.length === 0 ? (
-            <EmptyState message={partner ? '파트너에게 할 일이 없어요' : '파트너와 연결해주세요'} />
-          ) : (
-            partnerChores.map((chore) => (
-              <ChoreCard
-                key={chore.id}
-                chore={chore}
-                currentUser={user}
-                partner={partner}
-                onClick={() => navigate(`/chore/${chore.id}`)}
-              />
-            ))
-          )}
-        </section>
+      {/* 내 할 일 */}
+      <Spacing size={16} />
+      <div style={{ padding: '0 16px' }}>
+        <Text color={adaptive.grey900} typography="t6" fontWeight="semibold">
+          내 할 일 {myChores.length}
+        </Text>
       </div>
+      <Spacing size={4} />
+      {myChores.length === 0 ? (
+        <div style={{ padding: '32px 16px', textAlign: 'center' }}>
+          <Text color={adaptive.grey400} typography="t6">할 일이 없어요</Text>
+        </div>
+      ) : (
+        <List>
+          {myChores.map(chore => (
+            <ChoreCard
+              key={chore.id}
+              chore={chore}
+              currentUser={user}
+              partner={partner}
+              onClick={() => navigate(`/chore/${chore.id}`)}
+              onComplete={() => handleCompleteChore(chore)}
+            />
+          ))}
+        </List>
+      )}
 
-      {/* FAB */}
-      <Button
-        size="large"
-        color="primary"
-        variant="fill"
-        onClick={() => navigate('/chore/create')}
-        style={{
-          position: 'fixed',
-          bottom: '80px',
-          right: '16px',
-          width: '56px',
-          height: '56px',
-          borderRadius: '28px',
-          padding: 0,
-          minWidth: 'unset',
-          boxShadow: '0 4px 12px rgba(59, 130, 246, 0.4)',
-        }}
-      >
-        +
-      </Button>
+      {/* 파트너 할 일 */}
+      <Spacing size={16} />
+      <div style={{ padding: '0 16px' }}>
+        <Text color={adaptive.grey900} typography="t6" fontWeight="semibold">
+          파트너 할 일 {partnerChores.length}
+        </Text>
+      </div>
+      <Spacing size={4} />
+      {partnerChores.length === 0 ? (
+        <div style={{ padding: '32px 16px', textAlign: 'center' }}>
+          <Text color={adaptive.grey400} typography="t6">
+            {partner ? '파트너에게 할 일이 없어요' : '파트너와 연결해주세요'}
+          </Text>
+        </div>
+      ) : (
+        <List>
+          {partnerChores.map(chore => (
+            <ChoreCard
+              key={chore.id}
+              chore={chore}
+              currentUser={user}
+              partner={partner}
+              onClick={() => navigate(`/chore/${chore.id}`)}
+            />
+          ))}
+        </List>
+      )}
 
-      {/* Bottom Tab Bar */}
-      <div
-        style={{
-          position: 'fixed',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          backgroundColor: '#fff',
-          borderTop: '1px solid #e5e7eb',
-          padding: '8px 16px',
-        }}
-      >
-        <SegmentedControl value="home" onChange={(v) => { if (v === 'rewards') navigate('/rewards'); }}>
-          <SegmentedControl.Item value="home">홈</SegmentedControl.Item>
-          <SegmentedControl.Item value="rewards">보상</SegmentedControl.Item>
-        </SegmentedControl>
+      {/* 추가하기 row */}
+      <List>
+        <ListRow
+          onClick={() => navigate('/chore/create')}
+          left={
+            <ListRow.AssetIcon
+              shape="original"
+              name="icon-plus-grey-fill"
+              variant="fill"
+            />
+          }
+          contents={
+            <ListRow.Texts
+              type="1RowTypeA"
+              top="추가하기"
+              topProps={{ color: adaptive.grey700 }}
+            />
+          }
+          verticalPadding="large"
+        />
+      </List>
+
+      {/* Bottom Tab */}
+      <div style={{
+        position: 'fixed', bottom: 0, left: 0, right: 0,
+        display: 'flex', backgroundColor: '#fff', borderTop: `1px solid ${adaptive.grey100}`,
+        padding: '8px 0 4px',
+      }}>
+        <div style={{ flex: 1, textAlign: 'center', cursor: 'pointer' }} onClick={() => navigate('/home')}>
+          <Asset.Icon frameShape={Asset.frameShape.CleanW24} name="icon-home-mono" color={adaptive.grey800} aria-hidden />
+          <Text display="block" color={adaptive.grey900} typography="st13" fontWeight="medium" textAlign="center">홈</Text>
+        </div>
+        <div style={{ flex: 1, textAlign: 'center', cursor: 'pointer' }} onClick={() => navigate('/rewards')}>
+          <Asset.Icon frameShape={Asset.frameShape.CleanW24} name="icon-diamond-mono" color={adaptive.grey400} aria-hidden />
+          <Text display="block" color={adaptive.grey600} typography="st13" fontWeight="medium" textAlign="center">보상</Text>
+        </div>
       </div>
     </div>
   );

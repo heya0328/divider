@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Paragraph, Spacing, Badge, Button, TableRow } from '@toss/tds-mobile';
+import { Spacing, Badge, Button, TableRow, Top, Text, Paragraph } from '@toss/tds-mobile';
+import { adaptive } from '@toss/tds-colors';
 import { useApp } from '../../context/AppContext';
 import {
   acceptDraftChore,
