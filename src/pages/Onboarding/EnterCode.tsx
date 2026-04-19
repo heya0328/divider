@@ -5,7 +5,7 @@ import { useApp } from '../../context/AppContext';
 import { joinWithCode } from '../../data/couples';
 
 export default function EnterCode() {
-  const { user, dispatch } = useApp();
+  const { user, dispatch, refreshData } = useApp();
   const navigate = useNavigate();
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
@@ -22,6 +22,8 @@ export default function EnterCode() {
         type: 'SET_USER',
         payload: { ...user, couple_id: updatedCouple.id },
       });
+      // 매칭 후 데이터 로드
+      await refreshData();
       navigate('/home');
     } catch (err) {
       if (err instanceof Error) {

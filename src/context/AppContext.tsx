@@ -4,6 +4,7 @@ import {
   useReducer,
   useCallback,
   useEffect,
+  useRef,
   type ReactNode,
 } from 'react';
 import type { User, Chore, Reward } from '../types';
@@ -120,8 +121,14 @@ export function AppProvider({ children, user }: AppProviderProps) {
     user,
   });
 
+  // state.user를 ref로 추적하여 refreshData가 항상 최신 user를 참조
+  const userRef = useRef(state.user);
+  useEffect(() => {
+    userRef.current = state.user;
+  }, [state.user]);
+
   const refreshData = useCallback(async () => {
-    const currentUser = user;
+    const currentUser = userRef.current;
     if (!currentUser?.couple_id) return;
 
     dispatch({ type: 'SET_LOADING', payload: true });
@@ -149,11 +156,14 @@ export function AppProvider({ children, user }: AppProviderProps) {
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
     }
-  }, [user]);
+  }, []);
 
+  // user prop이 변경되거나 couple_id가 설정되면 데이터 새로고침
   useEffect(() => {
-    refreshData();
-  }, [refreshData]);
+    if (state.user?.couple_id) {
+      refreshData();
+    }
+  }, [state.user?.couple_id, refreshData]);
 
   return (
     <AppContext.Provider value={{ ...state, dispatch, refreshData }}>
