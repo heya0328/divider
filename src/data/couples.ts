@@ -91,6 +91,10 @@ export async function joinWithCode(
   if (findError) throw findError;
   if (!couple) throw new Error('Invalid or expired invite code');
 
+  if (couple.user_a_id === userId) {
+    throw new Error('자기 자신의 코드는 입력할 수 없어요');
+  }
+
   // Update couple with user_b
   const { data: updated, error: updateError } = await supabase
     .from('couples')
