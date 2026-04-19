@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Paragraph, Spacing, TextField, Button, ListRow } from '@toss/tds-mobile';
+import { Paragraph, Spacing, TextField, Button } from '@toss/tds-mobile';
 import { useApp } from '../../context/AppContext';
 import { createChore } from '../../data/chores';
 
@@ -86,30 +86,49 @@ export default function ChoreCreate() {
         <Spacing size={8} />
 
         <div style={{ border: '1px solid #e5e7eb', borderRadius: '12px', overflow: 'hidden' }}>
-          <ListRow
-            onClick={() => setAssigneeId(user.id)}
-            left={
-              <div style={{ width: '24px', height: '24px', borderRadius: '12px', border: `2px solid ${assigneeId === user.id ? '#3182f6' : '#d1d5db'}`, backgroundColor: assigneeId === user.id ? '#3182f6' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '14px' }}>
-                {assigneeId === user.id ? '✓' : ''}
-              </div>
-            }
-            contents={
-              <ListRow.Texts type="2RowTypeA" top="나" bottom="내가 직접 할게요" />
-            }
-          />
-          {partner && (
-            <ListRow
-              onClick={() => setAssigneeId(partner.id)}
-              left={
-                <div style={{ width: '24px', height: '24px', borderRadius: '12px', border: `2px solid ${assigneeId === partner.id ? '#3182f6' : '#d1d5db'}`, backgroundColor: assigneeId === partner.id ? '#3182f6' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '14px' }}>
-                  {assigneeId === partner.id ? '✓' : ''}
+          {[
+            { id: user.id, name: '나', desc: '내가 직접 할게요' },
+            ...(partner ? [{ id: partner.id, name: partner.nickname, desc: '파트너에게 요청해요' }] : []),
+          ].map((option) => {
+            const selected = assigneeId === option.id;
+            return (
+              <div
+                key={option.id}
+                onClick={() => setAssigneeId(option.id)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  padding: '16px',
+                  cursor: 'pointer',
+                  backgroundColor: selected ? '#eff6ff' : '#fff',
+                  borderBottom: '1px solid #f3f4f6',
+                }}
+              >
+                <div style={{
+                  width: '22px',
+                  height: '22px',
+                  borderRadius: '11px',
+                  border: `2px solid ${selected ? '#3182f6' : '#d1d5db'}`,
+                  backgroundColor: selected ? '#3182f6' : 'transparent',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}>
+                  {selected && <span style={{ color: '#fff', fontSize: '12px', lineHeight: 1 }}>✓</span>}
                 </div>
-              }
-              contents={
-                <ListRow.Texts type="2RowTypeA" top={partner.nickname} bottom="파트너에게 요청해요" />
-              }
-            />
-          )}
+                <div>
+                  <Paragraph typography="t6" fontWeight="semibold" color={selected ? '#3182f6' : '#111827'}>
+                    <Paragraph.Text>{option.name}</Paragraph.Text>
+                  </Paragraph>
+                  <Paragraph typography="t7" color="#9ca3af">
+                    <Paragraph.Text>{option.desc}</Paragraph.Text>
+                  </Paragraph>
+                </div>
+              </div>
+            );
+          })}
         </div>
 
         <Spacing size={24} />
