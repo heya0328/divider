@@ -117,17 +117,15 @@ export default function Home() {
             </Text>
           </div>
           <Spacing size={4} />
-          <List>
-            {pendingApproval.map(chore => (
-              <ChoreCard
-                key={chore.id}
-                chore={chore}
-                currentUser={user}
-                partner={partner}
-                onClick={() => navigate(`/chore/${chore.id}`)}
-              />
-            ))}
-          </List>
+          {pendingApproval.map(chore => (
+            <ChoreCard
+              key={chore.id}
+              chore={chore}
+              currentUser={user}
+              partner={partner}
+              onClick={() => navigate(`/chore/${chore.id}`)}
+            />
+          ))}
         </>
       )}
 
@@ -144,18 +142,16 @@ export default function Home() {
           <Text color={adaptive.grey400} typography="t6">할 일이 없어요</Text>
         </div>
       ) : (
-        <List>
-          {myChores.map(chore => (
-            <ChoreCard
-              key={chore.id}
-              chore={chore}
-              currentUser={user}
-              partner={partner}
-              onClick={() => navigate(`/chore/${chore.id}`)}
-              onCheckClick={() => handleCheckClick(chore)}
-            />
-          ))}
-        </List>
+        myChores.map(chore => (
+          <ChoreCard
+            key={chore.id}
+            chore={chore}
+            currentUser={user}
+            partner={partner}
+            onClick={() => navigate(`/chore/${chore.id}`)}
+            onCheckClick={() => handleCheckClick(chore)}
+          />
+        ))
       )}
 
       {/* 파트너 할 일 */}
@@ -173,7 +169,7 @@ export default function Home() {
           </Text>
         </div>
       ) : (
-        <List>
+        <>
           {partnerChores.map(chore => (
             <ChoreCard
               key={chore.id}
@@ -183,7 +179,7 @@ export default function Home() {
               onClick={() => navigate(`/chore/${chore.id}`)}
             />
           ))}
-        </List>
+        </>
       )}
 
       {/* FAB */}

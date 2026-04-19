@@ -1,4 +1,4 @@
-import { ListRow } from '@toss/tds-mobile';
+import { Text } from '@toss/tds-mobile';
 import { adaptive } from '@toss/tds-colors';
 import type { Chore, ChoreStatus, User } from '../types';
 import { REWARD_TEMPLATES } from '../constants';
@@ -36,7 +36,7 @@ export default function ChoreCard({ chore, currentUser, partner, onClick, onChec
     return ' 🎁';
   })();
 
-  const canCheck = !isCompleted && onCheckClick &&
+  const canCheck = !isCompleted && !!onCheckClick &&
     chore.assignee_id === currentUser.id &&
     (chore.status === 'pending' || chore.status === 'in_progress' || chore.status === 'reassigned');
 
@@ -47,23 +47,32 @@ export default function ChoreCard({ chore, currentUser, partner, onClick, onChec
     !isCompleted ? STATUS_LABELS[chore.status] : '',
   ].filter(Boolean).join(' · ') + rewardEmoji;
 
-  // 체크 아이콘과 ListRow를 나란히 배치하여
-  // 체크 영역 클릭과 나머지 영역 클릭을 완전히 분리
   return (
-    <div style={{ display: 'flex', alignItems: 'center' }}>
-      {/* 체크 아이콘 — ListRow 바깥에 독립적으로 배치 */}
-      <div
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        borderBottom: `1px solid ${adaptive.grey100}`,
+      }}
+    >
+      {/* 체크 아이콘 영역 — 독립 클릭 */}
+      <button
+        type="button"
         onClick={(e) => {
+          e.preventDefault();
           e.stopPropagation();
           if (canCheck) onCheckClick!();
         }}
+        disabled={!canCheck}
         style={{
-          paddingLeft: '20px',
-          paddingRight: '4px',
-          paddingTop: '16px',
-          paddingBottom: '16px',
+          background: 'none',
+          border: 'none',
+          padding: '16px 8px 16px 20px',
           cursor: canCheck ? 'pointer' : 'default',
           flexShrink: 0,
+          display: 'flex',
+          alignItems: 'center',
+          WebkitTapHighlightColor: 'transparent',
         }}
       >
         {isCompleted ? (
@@ -73,34 +82,43 @@ export default function ChoreCard({ chore, currentUser, partner, onClick, onChec
           </svg>
         ) : (
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <circle cx="12" cy="12" r="11" stroke={adaptive.grey300} strokeWidth="1.5" />
-            {canCheck && <path d="M7 12.5L10.5 16L17 9" stroke={adaptive.grey300} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />}
+            <circle cx="12" cy="12" r="11" stroke={canCheck ? adaptive.grey400 : adaptive.grey200} strokeWidth="1.5" />
+            {canCheck && (
+              <path d="M7 12.5L10.5 16L17 9" stroke={adaptive.grey300} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            )}
           </svg>
         )}
-      </div>
+      </button>
 
-      {/* 나머지 영역 — ListRow로 클릭 시 상세 페이지 이동 */}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <ListRow
-          onClick={onClick}
-          contents={
-            <ListRow.Texts
-              type="2RowTypeA"
-              top={chore.title}
-              topProps={{
-                color: isCompleted ? adaptive.grey400 : adaptive.grey800,
-                fontWeight: 'bold',
-              }}
-              bottom={bottomText}
-              bottomProps={{
-                color: isOverdue ? adaptive.red500 : adaptive.grey600,
-              }}
-            />
-          }
-          verticalPadding="large"
-          arrowType="right"
-          horizontalPadding="small"
-        />
+      {/* 콘텐츠 영역 — 클릭 시 상세 페이지 */}
+      <div
+        onClick={onClick}
+        style={{
+          flex: 1,
+          minWidth: 0,
+          padding: '16px 20px 16px 8px',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '12px',
+        }}
+      >
+        <div style={{ minWidth: 0 }}>
+          <Text
+            typography="t6"
+            fontWeight="bold"
+            color={isCompleted ? adaptive.grey400 : adaptive.grey800}
+          >
+            {chore.title}
+          </Text>
+          <Text typography="t7" color={isOverdue ? adaptive.red500 : adaptive.grey600}>
+            {bottomText}
+          </Text>
+        </div>
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" style={{ flexShrink: 0 }}>
+          <path d="M7.5 5L12.5 10L7.5 15" stroke={adaptive.grey400} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
       </div>
     </div>
   );
