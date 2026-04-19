@@ -39,14 +39,12 @@ export async function acceptHelpRequest(
 }
 
 export async function declineHelpRequest(
-  helpRequestId: string,
-  helperId: string
+  helpRequestId: string
 ): Promise<HelpRequest> {
   const { data, error } = await supabase
     .from('help_requests')
     .update({
       status: 'declined',
-      helper_id: helperId,
       responded_at: new Date().toISOString(),
     })
     .eq('id', helpRequestId)

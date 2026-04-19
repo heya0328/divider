@@ -45,6 +45,15 @@ export default function Home() {
       c.status !== 'completed'
   );
 
+  // "감사 전하기": 파트너가 대신 완료한 내 할일 (아직 감사 안 보낸 것)
+  const needsThanks: Chore[] = chores.filter(
+    (c) =>
+      c.status === 'completed' &&
+      c.original_assignee_id === user.id &&
+      c.completed_by_id != null &&
+      c.completed_by_id !== user.id
+  );
+
   return (
     <div style={{ minHeight: '100vh', paddingBottom: '80px' }}>
       {/* Header */}
@@ -66,6 +75,41 @@ export default function Home() {
       </div>
 
       <div style={{ padding: '16px' }}>
+        {/* 감사 전하기 */}
+        {needsThanks.length > 0 && (
+          <section>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Paragraph typography="t5" fontWeight="semibold" color="#3182f6">
+                <Paragraph.Text>감사를 전해보세요</Paragraph.Text>
+              </Paragraph>
+              <Badge size="small" variant="fill" color="blue">
+                {needsThanks.length}
+              </Badge>
+            </div>
+            <Spacing size={8} />
+            {needsThanks.map((chore) => (
+              <div
+                key={chore.id}
+                onClick={() => navigate(`/thanks/${chore.id}`)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '12px',
+                  padding: '14px 16px', cursor: 'pointer', borderBottom: '1px solid #f3f4f6',
+                  backgroundColor: '#eff6ff', borderRadius: '8px', marginBottom: '4px',
+                }}
+              >
+                <span style={{ fontSize: '20px' }}>🙏</span>
+                <div style={{ flex: 1 }}>
+                  <Paragraph typography="t6" fontWeight="medium" color="#111827">
+                    <Paragraph.Text>{partner?.nickname ?? '파트너'}님이 '{chore.title}'을 해줬어요</Paragraph.Text>
+                  </Paragraph>
+                </div>
+                <span style={{ color: '#3182f6', fontSize: '13px', fontWeight: 600 }}>감사 보내기 ›</span>
+              </div>
+            ))}
+            <Spacing size={24} />
+          </section>
+        )}
+
         {/* 수락 대기 중 */}
         {pendingApproval.length > 0 && (
           <section>

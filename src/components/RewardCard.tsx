@@ -1,4 +1,4 @@
-import { ListRow, Badge, Button } from '@toss/tds-mobile';
+import { Paragraph, Badge, Button } from '@toss/tds-mobile';
 import type { Reward, RewardStatus } from '../types';
 import { REWARD_TEMPLATES } from '../constants';
 
@@ -26,39 +26,40 @@ export default function RewardCard({ reward, isReceived, onAccept, onUse }: Rewa
   const displayText = template ? template.label : (reward.custom_text ?? '선물');
   const displayEmoji = template ? template.emoji : '🎁';
 
-  const actionButton = (() => {
-    if (isReceived && reward.status === 'pending' && onAccept) {
-      return (
-        <Button size="small" color="primary" variant="fill" onClick={onAccept}>
-          수락하기
-        </Button>
-      );
-    }
-    if (isReceived && reward.status === 'accepted' && onUse) {
-      return (
-        <Button size="small" color="primary" variant="weak" onClick={onUse}>
-          사용 완료
-        </Button>
-      );
-    }
-    return (
-      <Badge size="small" variant="fill" color={STATUS_COLORS[reward.status]}>
-        {STATUS_LABELS[reward.status]}
-      </Badge>
-    );
-  })();
-
   return (
-    <ListRow
-      left={<span style={{ fontSize: 28 }}>{displayEmoji}</span>}
-      contents={
-        <ListRow.Texts
-          type="2RowTypeA"
-          top={displayText}
-          bottom={STATUS_LABELS[reward.status]}
-        />
-      }
-      right={actionButton}
-    />
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: '12px',
+      padding: '14px 16px',
+      borderBottom: '1px solid #f3f4f6',
+    }}>
+      <span style={{ fontSize: '28px', flexShrink: 0 }}>{displayEmoji}</span>
+
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <Paragraph typography="t6" fontWeight="medium" color="#111827">
+          <Paragraph.Text>{displayText}</Paragraph.Text>
+        </Paragraph>
+        <Paragraph typography="t7" color="#9ca3af">
+          <Paragraph.Text>{new Date(reward.created_at).toLocaleDateString('ko-KR')}</Paragraph.Text>
+        </Paragraph>
+      </div>
+
+      <div style={{ flexShrink: 0 }}>
+        {isReceived && reward.status === 'pending' && onAccept ? (
+          <Button size="small" color="primary" variant="fill" onClick={(e) => { e.stopPropagation(); onAccept(); }}>
+            수락하기
+          </Button>
+        ) : isReceived && reward.status === 'accepted' && onUse ? (
+          <Button size="small" color="primary" variant="weak" onClick={(e) => { e.stopPropagation(); onUse(); }}>
+            사용 완료
+          </Button>
+        ) : (
+          <Badge size="small" variant="fill" color={STATUS_COLORS[reward.status]}>
+            {STATUS_LABELS[reward.status]}
+          </Badge>
+        )}
+      </div>
+    </div>
   );
 }

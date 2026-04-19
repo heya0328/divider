@@ -79,7 +79,7 @@ function reducer(state: AppState, action: Action): AppState {
         ...state,
         rewards: {
           ...state.rewards,
-          received: [action.payload, ...state.rewards.received],
+          sent: [action.payload, ...state.rewards.sent],
         },
       };
     case 'UPDATE_REWARD':

@@ -9,6 +9,7 @@ import {
   completeChore,
   requestHelp,
   reassignChore,
+  revertToInProgress,
 } from '../../data/chores';
 import { createHelpRequest, acceptHelpRequest, declineHelpRequest, getPendingHelpRequest } from '../../data/helpRequests';
 import type { ChoreStatus } from '../../types';
@@ -33,7 +34,7 @@ const STATUS_COLORS: Record<ChoreStatus, 'blue' | 'teal' | 'green' | 'red' | 'ye
 
 export default function ChoreDetail() {
   const { id } = useParams<{ id: string }>();
-  const { user, partner, chores, dispatch } = useApp();
+  const { user, partner, chores, dispatch, refreshData } = useApp();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -42,20 +43,34 @@ export default function ChoreDetail() {
 
   if (!user || !chore) {
     return (
-      <div style={{ padding: '24px', textAlign: 'center' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
         <Paragraph typography="t5" color="#6b7280" textAlign="center">
           <Paragraph.Text>할 일을 찾을 수 없어요</Paragraph.Text>
         </Paragraph>
+        <Spacing size={16} />
+        <Button size="medium" color="primary" variant="fill" onClick={() => navigate('/home')}>
+          홈으로
+        </Button>
       </div>
     );
   }
 
   const isMyChore = chore.assignee_id === user.id;
-  const isPartnerChore = partner && chore.assignee_id === partner.id;
+  const isPartnerChore = partner != null && chore.assignee_id === partner.id;
+
+  // 파트너가 나에게 할당한 draft → 내가 수락해야 함
   const needsMyApproval =
     chore.status === 'draft' &&
     chore.assignee_id === user.id &&
     chore.created_by_id !== user.id;
+
+  // 완료된 chore에서 감사를 보낼 수 있는지:
+  // 내가 원래 담당자인데 다른 사람이 대신 완료한 경우
+  const canSendThanks =
+    chore.status === 'completed' &&
+    chore.original_assignee_id === user.id &&
+    chore.completed_by_id != null &&
+    chore.completed_by_id !== user.id;
 
   const assigneeName = isMyChore ? '나' : (partner?.nickname ?? '파트너');
 
@@ -64,12 +79,14 @@ export default function ChoreDetail() {
     setError(null);
     try {
       await fn();
-    } catch {
-      setError('오류가 발생했어요. 다시 시도해주세요.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '오류가 발생했어요. 다시 시도해주세요.');
     } finally {
       setLoading(false);
     }
   };
+
+  // --- 액션 핸들러 ---
 
   const handleAcceptDraft = () =>
     run(async () => {
@@ -81,6 +98,7 @@ export default function ChoreDetail() {
     run(async () => {
       const updated = await rejectDraftChore(chore.id, chore.created_by_id);
       dispatch({ type: 'UPDATE_CHORE', payload: updated });
+      navigate('/home');
     });
 
   const handleStart = () =>
@@ -93,9 +111,7 @@ export default function ChoreDetail() {
     run(async () => {
       const updated = await completeChore(chore.id, user.id);
       dispatch({ type: 'UPDATE_CHORE', payload: updated });
-      if (chore.status === 'reassigned') {
-        navigate(`/thanks/${chore.id}`);
-      }
+      navigate('/home');
     });
 
   const handleRequestHelp = () =>
@@ -119,30 +135,20 @@ export default function ChoreDetail() {
     run(async () => {
       const helpReq = await getPendingHelpRequest(chore.id);
       if (helpReq) {
-        await declineHelpRequest(helpReq.id, user.id);
+        await declineHelpRequest(helpReq.id);
       }
+      // 도움 거절 시 chore를 in_progress로 되돌림
+      const updated = await revertToInProgress(chore.id);
+      dispatch({ type: 'UPDATE_CHORE', payload: updated });
       navigate('/home');
     });
 
   return (
-    <div style={{ minHeight: '100vh' }}>
+    <div style={{ minHeight: '100vh', paddingBottom: '100px' }}>
       {/* Header */}
-      <div
-        style={{
-          padding: '20px 16px 16px',
-          borderBottom: '1px solid #e5e7eb',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px',
-        }}
-      >
-        <Button
-          size="small"
-          color="light"
-          variant="weak"
-          onClick={() => navigate('/home')}
-        >
-          &larr;
+      <div style={{ padding: '20px 16px 16px', borderBottom: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <Button size="small" color="light" variant="weak" onClick={() => navigate('/home')}>
+          ←
         </Button>
         <Paragraph typography="t4" fontWeight="bold" color="#111827">
           <Paragraph.Text>할 일 상세</Paragraph.Text>
@@ -151,7 +157,7 @@ export default function ChoreDetail() {
 
       <div style={{ padding: '24px 16px' }}>
         {/* Chore title */}
-        <Paragraph typography="t3" fontWeight="bold" color="#111827">
+        <Paragraph typography="t3" fontWeight="bold" color={chore.status === 'completed' ? '#9ca3af' : '#111827'}>
           <Paragraph.Text>{chore.title}</Paragraph.Text>
         </Paragraph>
 
@@ -170,6 +176,13 @@ export default function ChoreDetail() {
           />
           <TableRow align="space-between" left="담당자" right={assigneeName} />
           <TableRow align="space-between" left="마감일" right={chore.due_date ?? '없음'} />
+          {chore.status === 'completed' && chore.completed_by_id && (
+            <TableRow
+              align="space-between"
+              left="완료한 사람"
+              right={chore.completed_by_id === user.id ? '나' : (partner?.nickname ?? '파트너')}
+            />
+          )}
         </div>
 
         <Spacing size={24} />
@@ -183,117 +196,82 @@ export default function ChoreDetail() {
           </>
         )}
 
-        {/* Conditional action buttons */}
+        {/* --- 조건부 액션 버튼 --- */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {/* draft + needs my approval */}
+
+          {/* draft: 파트너가 나에게 할당 → 수락/거절 */}
           {needsMyApproval && (
             <>
-              <Button
-                size="xlarge"
-                display="full"
-                color="primary"
-                variant="fill"
-                onClick={handleAcceptDraft}
-                disabled={loading}
-                loading={loading}
-              >
+              <Button size="xlarge" display="full" color="primary" variant="fill"
+                onClick={handleAcceptDraft} disabled={loading} loading={loading}>
                 수락하기
               </Button>
-              <Button
-                size="xlarge"
-                display="full"
-                color="light"
-                variant="weak"
-                onClick={handleRejectDraft}
-                disabled={loading}
-              >
+              <Button size="xlarge" display="full" color="light" variant="weak"
+                onClick={handleRejectDraft} disabled={loading}>
                 괜찮아요, 다음에
               </Button>
             </>
           )}
 
-          {/* pending + my chore */}
+          {/* pending: 내 할일 → 시작하기 */}
           {chore.status === 'pending' && isMyChore && (
-            <Button
-              size="xlarge"
-              display="full"
-              color="primary"
-              variant="fill"
-              onClick={handleStart}
-              disabled={loading}
-              loading={loading}
-            >
+            <Button size="xlarge" display="full" color="primary" variant="fill"
+              onClick={handleStart} disabled={loading} loading={loading}>
               시작하기
             </Button>
           )}
 
-          {/* in_progress + my chore */}
+          {/* in_progress: 내 할일 → 완료 또는 도움 요청 */}
           {chore.status === 'in_progress' && isMyChore && (
             <>
-              <Button
-                size="xlarge"
-                display="full"
-                color="primary"
-                variant="fill"
-                onClick={handleComplete}
-                disabled={loading}
-                loading={loading}
-              >
+              <Button size="xlarge" display="full" color="primary" variant="fill"
+                onClick={handleComplete} disabled={loading} loading={loading}>
                 완료했어요
               </Button>
-              <Button
-                size="xlarge"
-                display="full"
-                color="light"
-                variant="weak"
-                onClick={handleRequestHelp}
-                disabled={loading}
-              >
+              <Button size="xlarge" display="full" color="light" variant="weak"
+                onClick={handleRequestHelp} disabled={loading}>
                 오늘 이 일, 도움 받을래요
               </Button>
             </>
           )}
 
-          {/* help_requested + partner's chore */}
+          {/* help_requested: 파트너 할일 → 대신할게 또는 거절 */}
           {chore.status === 'help_requested' && isPartnerChore && (
             <>
-              <Button
-                size="xlarge"
-                display="full"
-                color="primary"
-                variant="fill"
-                onClick={handleTakeOver}
-                disabled={loading}
-                loading={loading}
-              >
+              <Button size="xlarge" display="full" color="primary" variant="fill"
+                onClick={handleTakeOver} disabled={loading} loading={loading}>
                 내가 대신할게
               </Button>
-              <Button
-                size="xlarge"
-                display="full"
-                color="light"
-                variant="weak"
-                onClick={handleDeclineHelp}
-                disabled={loading}
-              >
+              <Button size="xlarge" display="full" color="light" variant="weak"
+                onClick={handleDeclineHelp} disabled={loading}>
                 괜찮아요, 다음에
               </Button>
             </>
           )}
 
-          {/* reassigned + my chore */}
+          {/* reassigned: 내가 대신 맡은 할일 → 완료 */}
           {chore.status === 'reassigned' && isMyChore && (
-            <Button
-              size="xlarge"
-              display="full"
-              color="primary"
-              variant="fill"
-              onClick={handleComplete}
-              disabled={loading}
-              loading={loading}
-            >
+            <Button size="xlarge" display="full" color="primary" variant="fill"
+              onClick={handleComplete} disabled={loading} loading={loading}>
               완료했어요
             </Button>
+          )}
+
+          {/* completed: 내가 원래 담당인데 파트너가 대신 해줌 → 감사 보내기 */}
+          {canSendThanks && (
+            <>
+              <Spacing size={8} />
+              <div style={{ textAlign: 'center', padding: '16px', backgroundColor: '#eff6ff', borderRadius: '12px' }}>
+                <Paragraph typography="t6" color="#3182f6" textAlign="center">
+                  <Paragraph.Text>{partner?.nickname ?? '파트너'}님이 대신 해줬어요!</Paragraph.Text>
+                </Paragraph>
+              </div>
+              <Spacing size={8} />
+              <Button size="xlarge" display="full" color="primary" variant="fill"
+                onClick={() => navigate(`/thanks/${chore.id}`)}>
+                감사 선물 보내기
+              </Button>
+            </>
           )}
         </div>
       </div>
