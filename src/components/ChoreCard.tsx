@@ -38,7 +38,7 @@ export default function ChoreCard({ chore, currentUser, partner, onClick, onChec
 
   const canCheck = !isCompleted && onCheckClick &&
     chore.assignee_id === currentUser.id &&
-    (chore.status === 'in_progress' || chore.status === 'reassigned');
+    (chore.status === 'pending' || chore.status === 'in_progress' || chore.status === 'reassigned');
 
   const checkIconName = isCompleted
     ? 'icon-check-circle-blue'
