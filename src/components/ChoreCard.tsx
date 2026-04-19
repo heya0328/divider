@@ -1,4 +1,4 @@
-import { Text } from '@toss/tds-mobile';
+import { Text, Asset } from '@toss/tds-mobile';
 import { adaptive } from '@toss/tds-colors';
 import type { Chore, ChoreStatus, User } from '../types';
 import { REWARD_TEMPLATES } from '../constants';
@@ -55,7 +55,7 @@ export default function ChoreCard({ chore, currentUser, partner, onClick, onChec
         borderBottom: `1px solid ${adaptive.grey100}`,
       }}
     >
-      {/* 체크 아이콘 영역 — 독립 클릭 */}
+      {/* 체크 아이콘 영역 */}
       <button
         type="button"
         onClick={(e) => {
@@ -90,7 +90,7 @@ export default function ChoreCard({ chore, currentUser, partner, onClick, onChec
         )}
       </button>
 
-      {/* 콘텐츠 영역 — 클릭 시 상세 페이지 */}
+      {/* 콘텐츠 영역 */}
       <div
         onClick={onClick}
         style={{
@@ -110,15 +110,18 @@ export default function ChoreCard({ chore, currentUser, partner, onClick, onChec
             fontWeight="bold"
             color={isCompleted ? adaptive.grey400 : adaptive.grey800}
           >
-            {chore.title}
+            {chore.template_id ? '🔁 ' : ''}{chore.title}
           </Text>
-          <Text typography="t7" color={isOverdue ? adaptive.red500 : adaptive.grey600}>
+          <Text display="block" typography="t7" color={isOverdue ? adaptive.red500 : adaptive.grey500}>
             {bottomText}
           </Text>
         </div>
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" style={{ flexShrink: 0 }}>
-          <path d="M7.5 5L12.5 10L7.5 15" stroke={adaptive.grey400} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
+        <Asset.Icon
+          frameShape={Asset.frameShape.CleanW24}
+          name="icon-arrow-right-mono"
+          color={adaptive.grey300}
+          aria-hidden
+        />
       </div>
     </div>
   );
