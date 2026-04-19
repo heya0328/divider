@@ -1,6 +1,6 @@
 import { useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Spacing, Top, List, ListRow, Text, Asset, Button } from '@toss/tds-mobile';
+import { Spacing, Top, List, ListRow, Text, Asset, Button, useDialog } from '@toss/tds-mobile';
 import { adaptive } from '@toss/tds-colors';
 import { useApp } from '../../context/AppContext';
 import { revertToInProgress, completeChore } from '../../data/chores';
@@ -11,6 +11,7 @@ import type { Chore } from '../../types';
 export default function Home() {
   const { user, partner, chores, dispatch, refreshData } = useApp();
   const navigate = useNavigate();
+  const dialog = useDialog();
 
   const loadData = useCallback(async () => {
     await refreshData();
@@ -42,11 +43,20 @@ export default function Home() {
       c.completed_by_id != null && c.completed_by_id !== user.id
   );
 
-  const handleCompleteChore = async (chore: Chore) => {
-    try {
-      const updated = await completeChore(chore.id, user.id);
-      dispatch({ type: 'UPDATE_CHORE', payload: updated });
-    } catch { /* retry via detail */ }
+  const handleCheckClick = async (chore: Chore) => {
+    const confirmed = await dialog.openConfirm({
+      title: '완료하시겠어요?',
+      description: `'${chore.title}'을 완료로 표시할까요?`,
+      confirmButton: '완료하기',
+      cancelButton: '취소',
+    });
+
+    if (confirmed) {
+      try {
+        const updated = await completeChore(chore.id, user.id);
+        dispatch({ type: 'UPDATE_CHORE', payload: updated });
+      } catch { /* retry via detail page */ }
+    }
   };
 
   const totalActive = myChores.length + partnerChores.length + pendingApproval.length;
@@ -142,7 +152,7 @@ export default function Home() {
               currentUser={user}
               partner={partner}
               onClick={() => navigate(`/chore/${chore.id}`)}
-              onComplete={() => handleCompleteChore(chore)}
+              onCheckClick={() => handleCheckClick(chore)}
             />
           ))}
         </List>
@@ -176,27 +186,26 @@ export default function Home() {
         </List>
       )}
 
-      {/* 추가하기 row */}
-      <List>
-        <ListRow
-          onClick={() => navigate('/chore/create')}
-          left={
-            <ListRow.AssetIcon
-              shape="original"
-              name="icon-plus-grey-fill"
-              variant="fill"
-            />
-          }
-          contents={
-            <ListRow.Texts
-              type="1RowTypeA"
-              top="추가하기"
-              topProps={{ color: adaptive.grey700 }}
-            />
-          }
-          verticalPadding="large"
-        />
-      </List>
+      {/* FAB */}
+      <div
+        onClick={() => navigate('/chore/create')}
+        style={{
+          position: 'fixed',
+          bottom: '88px',
+          right: '20px',
+          width: '56px',
+          height: '56px',
+          borderRadius: '28px',
+          backgroundColor: adaptive.blue500,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 4px 12px rgba(49, 130, 246, 0.4)',
+          cursor: 'pointer',
+        }}
+      >
+        <Asset.Icon frameShape={Asset.frameShape.CleanW24} name="icon-plus-mono" color="#fff" aria-hidden />
+      </div>
 
       {/* Bottom Tab */}
       <div style={{

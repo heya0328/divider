@@ -8,7 +8,7 @@ interface ChoreCardProps {
   currentUser: User;
   partner: User | null;
   onClick: () => void;
-  onComplete?: () => void;
+  onCheckClick?: () => void;
 }
 
 const STATUS_LABELS: Record<ChoreStatus, string> = {
@@ -20,7 +20,7 @@ const STATUS_LABELS: Record<ChoreStatus, string> = {
   completed: '완료',
 };
 
-export default function ChoreCard({ chore, currentUser, partner, onClick, onComplete }: ChoreCardProps) {
+export default function ChoreCard({ chore, currentUser, partner, onClick, onCheckClick }: ChoreCardProps) {
   const isCompleted = chore.status === 'completed';
   const today = new Date().toISOString().split('T')[0];
   const isOverdue = chore.due_date != null && chore.due_date < today && !isCompleted;
@@ -36,11 +36,10 @@ export default function ChoreCard({ chore, currentUser, partner, onClick, onComp
     return ' 🎁';
   })();
 
-  const canComplete = !isCompleted && onComplete &&
+  const canCheck = !isCompleted && onCheckClick &&
     chore.assignee_id === currentUser.id &&
     (chore.status === 'in_progress' || chore.status === 'reassigned');
 
-  // 체크 아이콘: 완료 → 파란 체크, 미완료 → 빈 원
   const checkIconName = isCompleted
     ? 'icon-check-circle-blue'
     : 'icon-system-check-circle-outlined';
@@ -55,25 +54,16 @@ export default function ChoreCard({ chore, currentUser, partner, onClick, onComp
 
   return (
     <ListRow
-      onClick={(e) => {
-        // 체크 아이콘 영역 클릭 시 완료 처리
-        const target = e.target as HTMLElement;
-        if (canComplete && target.closest('[data-check-icon]')) {
-          e.stopPropagation();
-          onComplete!();
-          return;
-        }
-        onClick();
-      }}
+      onClick={onClick}
       left={
         <div
-          data-check-icon
           onClick={(e) => {
-            if (canComplete) {
+            if (canCheck) {
               e.stopPropagation();
-              onComplete!();
+              onCheckClick!();
             }
           }}
+          style={{ cursor: canCheck ? 'pointer' : 'default' }}
         >
           <ListRow.AssetIcon
             size="xsmall"
