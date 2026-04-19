@@ -2,6 +2,8 @@ import { useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Paragraph, Spacing, Badge, Button } from '@toss/tds-mobile';
 import { useApp } from '../../context/AppContext';
+import { revertToInProgress } from '../../data/chores';
+import { expireOldHelpRequests } from '../../data/helpRequests';
 import ChoreCard from '../../components/ChoreCard';
 import EmptyState from '../../components/EmptyState';
 import type { Chore } from '../../types';
@@ -10,13 +12,25 @@ export default function Home() {
   const { user, partner, chores, refreshData } = useApp();
   const navigate = useNavigate();
 
-  const loadData = useCallback(() => {
-    refreshData();
-  }, [refreshData]);
+  // 로드 시 만료된 도움 요청 자동 처리
+  const loadData = useCallback(async () => {
+    await refreshData();
+
+    // help_requested 상태인 chore들의 만료 체크
+    for (const c of chores.filter(ch => ch.status === 'help_requested')) {
+      const expired = await expireOldHelpRequests(c.id);
+      if (expired) {
+        await revertToInProgress(c.id);
+      }
+    }
+    // 만료 처리 후 다시 로드
+    await refreshData();
+  }, [refreshData, chores]);
 
   useEffect(() => {
     loadData();
-  }, [loadData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (!user) return null;
 

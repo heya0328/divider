@@ -55,6 +55,29 @@ export async function declineHelpRequest(
   return data as HelpRequest;
 }
 
+/** Check and expire help requests older than 24h, returning chore to in_progress */
+export async function expireOldHelpRequests(choreId: string): Promise<boolean> {
+  const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
+  const { data: expired } = await supabase
+    .from('help_requests')
+    .select('id')
+    .eq('chore_id', choreId)
+    .eq('status', 'pending')
+    .lt('created_at', cutoff);
+
+  if (expired && expired.length > 0) {
+    for (const req of expired) {
+      await supabase
+        .from('help_requests')
+        .update({ status: 'expired', responded_at: new Date().toISOString() })
+        .eq('id', req.id);
+    }
+    return true;
+  }
+  return false;
+}
+
 export async function getPendingHelpRequest(
   choreId: string
 ): Promise<HelpRequest | null> {

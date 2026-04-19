@@ -8,13 +8,20 @@ import { supabase } from '../../data/supabase';
 import type { Couple } from '../../types';
 
 export default function CreateCode() {
-  const { user, dispatch } = useApp();
+  const { user, dispatch, partner } = useApp();
   const navigate = useNavigate();
   const { shareMessage } = useShare();
   const [couple, setCouple] = useState<Couple | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // 이미 매칭 완료된 사용자는 홈으로
+  useEffect(() => {
+    if (user?.couple_id && partner) {
+      navigate('/home', { replace: true });
+    }
+  }, [user, partner, navigate]);
 
   // 파트너가 코드를 입력했는지 폴링
   useEffect(() => {

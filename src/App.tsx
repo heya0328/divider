@@ -3,6 +3,7 @@ import { Paragraph, Spacing, Button } from '@toss/tds-mobile';
 import { useAuth } from './hooks/useAuth';
 import { useBackEvent } from './hooks/useBackEvent';
 import { AppProvider } from './context/AppContext';
+import Welcome from './pages/Onboarding/Welcome';
 import CreateCode from './pages/Onboarding/CreateCode';
 import EnterCode from './pages/Onboarding/EnterCode';
 import Home from './pages/Home/Home';
@@ -16,6 +17,7 @@ function AppRoutes() {
   useBackEvent();
   return (
     <Routes>
+      <Route path="/onboarding" element={<Welcome />} />
       <Route path="/onboarding/create" element={<CreateCode />} />
       <Route path="/onboarding/enter" element={<EnterCode />} />
       <Route path="/home" element={<Home />} />
@@ -63,7 +65,7 @@ export default function App() {
     );
   }
 
-  const initialRoute = user.couple_id ? '/home' : '/onboarding/create';
+  const initialRoute = user.couple_id ? '/home' : '/onboarding';
 
   return (
     <AppProvider user={user}>

@@ -62,23 +62,15 @@ export async function acceptDraftChore(choreId: string): Promise<Chore> {
   return updateChoreStatus(choreId, 'pending');
 }
 
-/** Assignee rejects the draft → creator gets it back as 'pending' */
-export async function rejectDraftChore(
-  choreId: string,
-  creatorId: string
-): Promise<Chore> {
-  const { data, error } = await supabase
+/** Assignee rejects the draft → chore is deleted */
+export async function rejectDraftChore(choreId: string): Promise<void> {
+  const { error } = await supabase
     .from('chores')
-    .update({
-      status: 'pending',
-      assignee_id: creatorId,
-    })
+    .delete()
     .eq('id', choreId)
-    .select('*')
-    .single();
+    .eq('status', 'draft');
 
   if (error) throw error;
-  return data as Chore;
 }
 
 /** Assignee starts the chore → status becomes 'in_progress' */
@@ -100,15 +92,25 @@ export async function requestHelp(
   return updateChoreStatus(choreId, 'help_requested', extra);
 }
 
-/** Mark a chore as completed */
+/** Mark a chore as completed (optimistic lock: only if not already completed) */
 export async function completeChore(
   choreId: string,
   completedById: string
 ): Promise<Chore> {
-  return updateChoreStatus(choreId, 'completed', {
-    completed_by_id: completedById,
-    completed_at: new Date().toISOString(),
-  });
+  const { data, error } = await supabase
+    .from('chores')
+    .update({
+      status: 'completed',
+      completed_by_id: completedById,
+      completed_at: new Date().toISOString(),
+    })
+    .eq('id', choreId)
+    .neq('status', 'completed')
+    .select('*')
+    .single();
+
+  if (error) throw error;
+  return data as Chore;
 }
 
 /** Reassign chore to a different user (after help accepted) */

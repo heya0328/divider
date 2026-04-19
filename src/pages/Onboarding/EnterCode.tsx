@@ -1,15 +1,22 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Paragraph, Spacing, TextField, Button } from '@toss/tds-mobile';
 import { useApp } from '../../context/AppContext';
 import { joinWithCode } from '../../data/couples';
 
 export default function EnterCode() {
-  const { user, dispatch, refreshData } = useApp();
+  const { user, dispatch, refreshData, partner } = useApp();
   const navigate = useNavigate();
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // 이미 매칭 완료된 사용자는 홈으로
+  useEffect(() => {
+    if (user?.couple_id && partner) {
+      navigate('/home', { replace: true });
+    }
+  }, [user, partner, navigate]);
 
   const handleSubmit = async () => {
     if (!user || code.length !== 6) return;

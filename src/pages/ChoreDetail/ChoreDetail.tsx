@@ -109,8 +109,8 @@ export default function ChoreDetail() {
 
   const handleRejectDraft = () =>
     run(async () => {
-      const updated = await rejectDraftChore(chore.id, chore.created_by_id);
-      dispatch({ type: 'UPDATE_CHORE', payload: updated });
+      await rejectDraftChore(chore.id);
+      dispatch({ type: 'REMOVE_CHORE', payload: chore.id });
       navigate('/home');
     });
 
