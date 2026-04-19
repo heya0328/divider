@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { Paragraph } from '@toss/tds-mobile';
+import { Paragraph, Spacing, Button } from '@toss/tds-mobile';
 import { useAuth } from './hooks/useAuth';
 import { useBackEvent } from './hooks/useBackEvent';
 import { AppProvider } from './context/AppContext';
@@ -30,7 +30,7 @@ function AppRoutes() {
 }
 
 export default function App() {
-  const { user, loading, error } = useAuth();
+  const { user, loading, error, retry } = useAuth();
 
   if (loading) {
     return (
@@ -44,10 +44,21 @@ export default function App() {
 
   if (error || !user) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', padding: '24px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100vh', padding: '24px' }}>
         <Paragraph typography="t5" color="#dc2626" textAlign="center">
           <Paragraph.Text>{error || '로그인이 필요해요'}</Paragraph.Text>
         </Paragraph>
+        <Spacing size={16} />
+        <Button size="large" color="primary" variant="fill" onClick={retry}>
+          다시 시도
+        </Button>
+        <Spacing size={8} />
+        <Button size="medium" color="light" variant="weak" onClick={() => {
+          localStorage.removeItem('divider_dev_user_id');
+          window.location.reload();
+        }}>
+          새 사용자로 시작
+        </Button>
       </div>
     );
   }
