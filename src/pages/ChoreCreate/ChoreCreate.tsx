@@ -221,7 +221,7 @@ export default function ChoreCreate() {
             {dueDate && (
               <>
                 <Spacing size={8} />
-                <Button size="small" color="light" variant="weak" onClick={() => setDueDate('')}>
+                <Button size="small" color="light" variant="fill" onClick={() => setDueDate('')}>
                   마감일 삭제
                 </Button>
               </>

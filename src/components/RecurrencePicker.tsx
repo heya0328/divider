@@ -1,4 +1,4 @@
-import { Spacing, Text, Checkbox, ListRow } from '@toss/tds-mobile';
+import { Spacing, Text, Checkbox, ListRow, Button } from '@toss/tds-mobile';
 import { adaptive } from '@toss/tds-colors';
 import type { RecurrenceType } from '../types';
 import { WEEKDAY_LABELS, NTH_LABELS } from '../constants';
@@ -91,6 +91,7 @@ export default function RecurrencePicker({ value, onChange }: RecurrencePickerPr
         })}
       </div>
 
+      {/* 매주: 요일 선택 */}
       {mode === 'weekly' && (
         <>
           <Spacing size={12} />
@@ -101,25 +102,16 @@ export default function RecurrencePicker({ value, onChange }: RecurrencePickerPr
               {WEEKDAY_LABELS.map((label, idx) => {
                 const selected = value?.days.includes(idx) ?? false;
                 return (
-                  <button
+                  <Button
                     key={idx}
-                    type="button"
+                    size="small"
+                    color={selected ? 'primary' : 'light'}
+                    variant={selected ? 'weak' : 'fill'}
                     onClick={() => toggleDay(idx)}
-                    style={{
-                      flex: 1,
-                      padding: '10px 0',
-                      borderRadius: '10px',
-                      border: `1.5px solid ${selected ? adaptive.blue500 : adaptive.grey200}`,
-                      backgroundColor: selected ? adaptive.blue50 : '#fff',
-                      color: selected ? adaptive.blue500 : adaptive.grey700,
-                      fontSize: '14px',
-                      fontWeight: selected ? 700 : 500,
-                      cursor: 'pointer',
-                      WebkitTapHighlightColor: 'transparent',
-                    }}
+                    style={{ flex: 1, minWidth: 0 }}
                   >
                     {label}
-                  </button>
+                  </Button>
                 );
               })}
             </div>
@@ -127,6 +119,7 @@ export default function RecurrencePicker({ value, onChange }: RecurrencePickerPr
         </>
       )}
 
+      {/* 매월: 주차 + 요일 선택 */}
       {mode === 'monthly' && (
         <>
           <Spacing size={12} />
@@ -138,25 +131,16 @@ export default function RecurrencePicker({ value, onChange }: RecurrencePickerPr
                 const nth = idx + 1;
                 const selected = value?.monthlyNth === nth;
                 return (
-                  <button
+                  <Button
                     key={nth}
-                    type="button"
+                    size="small"
+                    color={selected ? 'primary' : 'light'}
+                    variant={selected ? 'weak' : 'fill'}
                     onClick={() => setMonthlyNth(nth)}
-                    style={{
-                      flex: 1,
-                      padding: '10px 0',
-                      borderRadius: '10px',
-                      border: `1.5px solid ${selected ? adaptive.blue500 : adaptive.grey200}`,
-                      backgroundColor: selected ? adaptive.blue50 : '#fff',
-                      color: selected ? adaptive.blue500 : adaptive.grey700,
-                      fontSize: '14px',
-                      fontWeight: selected ? 700 : 500,
-                      cursor: 'pointer',
-                      WebkitTapHighlightColor: 'transparent',
-                    }}
+                    style={{ flex: 1, minWidth: 0 }}
                   >
                     {label}
-                  </button>
+                  </Button>
                 );
               })}
             </div>
@@ -164,25 +148,16 @@ export default function RecurrencePicker({ value, onChange }: RecurrencePickerPr
               {WEEKDAY_LABELS.map((label, idx) => {
                 const selected = value?.monthlyWeekday === idx;
                 return (
-                  <button
+                  <Button
                     key={idx}
-                    type="button"
+                    size="small"
+                    color={selected ? 'primary' : 'light'}
+                    variant={selected ? 'weak' : 'fill'}
                     onClick={() => setMonthlyWeekday(idx)}
-                    style={{
-                      flex: 1,
-                      padding: '10px 0',
-                      borderRadius: '10px',
-                      border: `1.5px solid ${selected ? adaptive.blue500 : adaptive.grey200}`,
-                      backgroundColor: selected ? adaptive.blue50 : '#fff',
-                      color: selected ? adaptive.blue500 : adaptive.grey700,
-                      fontSize: '14px',
-                      fontWeight: selected ? 700 : 500,
-                      cursor: 'pointer',
-                      WebkitTapHighlightColor: 'transparent',
-                    }}
+                    style={{ flex: 1, minWidth: 0 }}
                   >
                     {label}
-                  </button>
+                  </Button>
                 );
               })}
             </div>

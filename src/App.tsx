@@ -12,6 +12,7 @@ import ChoreDetail from './pages/ChoreDetail/ChoreDetail';
 import { HelpRequest } from './pages/HelpRequest/HelpRequest';
 import Thanks from './pages/Thanks/Thanks';
 import Rewards from './pages/Rewards/Rewards';
+import MyPage from './pages/MyPage/MyPage';
 
 function AppRoutes() {
   useBackEvent();
@@ -26,6 +27,7 @@ function AppRoutes() {
       <Route path="/help-request/:id" element={<HelpRequest />} />
       <Route path="/thanks/:id" element={<Thanks />} />
       <Route path="/rewards" element={<Rewards />} />
+      <Route path="/my" element={<MyPage />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   );
@@ -55,7 +57,7 @@ export default function App() {
           다시 시도
         </Button>
         <Spacing size={8} />
-        <Button size="medium" color="light" variant="weak" onClick={() => {
+        <Button size="medium" color="light" variant="fill" onClick={() => {
           localStorage.removeItem('divider_dev_user_id');
           window.location.reload();
         }}>

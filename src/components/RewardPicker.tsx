@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { Paragraph, Spacing, TextField, Button, Checkbox, ListRow } from '@toss/tds-mobile';
+import { Spacing, TextField, Button, Checkbox, ListRow, Text } from '@toss/tds-mobile';
+import { adaptive } from '@toss/tds-colors';
 import { REWARD_TEMPLATES } from '../constants';
 
 interface RewardPickerProps {
   onSelect: (reward: { type: 'template' | 'custom'; key?: string; text?: string } | null) => void;
-  /** 선택 취소 가능 여부 */
   optional?: boolean;
 }
 
@@ -46,7 +46,6 @@ export default function RewardPicker({ onSelect, optional = true }: RewardPicker
     onSelect(null);
   };
 
-  // 현재 선택된 보상 요약 텍스트
   const selectedLabel = (() => {
     if (selectedKey) {
       const t = REWARD_TEMPLATES.find(r => r.key === selectedKey);
@@ -62,12 +61,10 @@ export default function RewardPicker({ onSelect, optional = true }: RewardPicker
         {selectedLabel ? (
           <div style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: '12px 16px', backgroundColor: '#eff6ff', borderRadius: '10px',
+            padding: '14px 16px', backgroundColor: adaptive.blue50, borderRadius: '12px',
           }}>
-            <Paragraph typography="t6" color="#3182f6" fontWeight="medium">
-              <Paragraph.Text>{selectedLabel}</Paragraph.Text>
-            </Paragraph>
-            <Button size="small" color="light" variant="weak" onClick={() => setExpanded(true)}>
+            <Text typography="t6" color={adaptive.blue500} fontWeight="medium">{selectedLabel}</Text>
+            <Button size="small" color="light" variant="fill" onClick={() => setExpanded(true)}>
               변경
             </Button>
           </div>
@@ -89,18 +86,16 @@ export default function RewardPicker({ onSelect, optional = true }: RewardPicker
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Paragraph typography="t6" fontWeight="semibold" color="#374151">
-          <Paragraph.Text>보상 선택</Paragraph.Text>
-        </Paragraph>
+        <Text typography="t6" fontWeight="bold" color={adaptive.grey900}>보상 선택</Text>
         {optional && (
-          <Button size="small" color="light" variant="weak" onClick={() => { handleClear(); setExpanded(false); }}>
+          <Button size="small" color="light" variant="fill" onClick={() => { handleClear(); setExpanded(false); }}>
             건너뛰기
           </Button>
         )}
       </div>
       <Spacing size={8} />
 
-      <div style={{ border: '1px solid #e5e7eb', borderRadius: '12px', overflow: 'hidden' }}>
+      <div style={{ borderRadius: '12px', overflow: 'hidden', border: `1px solid ${adaptive.grey200}` }}>
         {REWARD_TEMPLATES.map((template) => {
           const isSelected = !useCustom && selectedKey === template.key;
           return (
@@ -113,9 +108,12 @@ export default function RewardPicker({ onSelect, optional = true }: RewardPicker
               horizontalPadding="small"
               left={<span style={{ fontSize: '22px', flexShrink: 0 }}>{template.emoji}</span>}
               contents={
-                <Paragraph typography="t6" fontWeight={isSelected ? 'semibold' : 'medium'} color={isSelected ? '#3182f6' : '#111827'}>
-                  <Paragraph.Text>{template.label}</Paragraph.Text>
-                </Paragraph>
+                <ListRow.Texts
+                  type="2RowTypeA"
+                  top={template.label}
+                  topProps={{ color: isSelected ? adaptive.blue500 : adaptive.grey900, fontWeight: isSelected ? 'bold' : 'medium' }}
+                  bottom=" "
+                />
               }
               right={
                 <Checkbox.Circle
@@ -126,8 +124,8 @@ export default function RewardPicker({ onSelect, optional = true }: RewardPicker
                 />
               }
               style={{
-                backgroundColor: isSelected ? '#eff6ff' : '#fff',
-                borderBottom: '1px solid #f3f4f6',
+                backgroundColor: isSelected ? adaptive.blue50 : '#fff',
+                borderBottom: `1px solid ${adaptive.grey100}`,
               }}
             />
           );
@@ -142,9 +140,12 @@ export default function RewardPicker({ onSelect, optional = true }: RewardPicker
           horizontalPadding="small"
           left={<span style={{ fontSize: '22px', flexShrink: 0 }}>✍️</span>}
           contents={
-            <Paragraph typography="t6" fontWeight={useCustom ? 'semibold' : 'medium'} color={useCustom ? '#3182f6' : '#111827'}>
-              <Paragraph.Text>직접 입력</Paragraph.Text>
-            </Paragraph>
+            <ListRow.Texts
+              type="2RowTypeA"
+              top="직접 입력"
+              topProps={{ color: useCustom ? adaptive.blue500 : adaptive.grey900, fontWeight: useCustom ? 'bold' : 'medium' }}
+              bottom=" "
+            />
           }
           right={
             <Checkbox.Circle
@@ -155,7 +156,7 @@ export default function RewardPicker({ onSelect, optional = true }: RewardPicker
             />
           }
           style={{
-            backgroundColor: useCustom ? '#eff6ff' : '#fff',
+            backgroundColor: useCustom ? adaptive.blue50 : '#fff',
           }}
         />
       </div>

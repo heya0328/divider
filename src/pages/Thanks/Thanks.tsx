@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Paragraph, Spacing, TextField, Button } from '@toss/tds-mobile';
+import { Spacing, TextField, Button, Top, Text, ListRow, Checkbox } from '@toss/tds-mobile';
+import { adaptive } from '@toss/tds-colors';
 import { useApp } from '../../context/AppContext';
 import { createReward } from '../../data/rewards';
 import { REWARD_TEMPLATES } from '../../constants';
@@ -21,18 +22,13 @@ export default function Thanks() {
   if (!user || !choreId || !chore) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
-        <Paragraph typography="t5" color="#6b7280" textAlign="center">
-          <Paragraph.Text>할 일 정보를 찾을 수 없어요</Paragraph.Text>
-        </Paragraph>
+        <Text color={adaptive.grey500} typography="t5" textAlign="center">할 일 정보를 찾을 수 없어요</Text>
         <Spacing size={16} />
-        <Button size="medium" color="primary" variant="fill" onClick={() => navigate('/home')}>
-          홈으로
-        </Button>
+        <Button size="medium" color="primary" variant="fill" onClick={() => navigate('/home')}>홈으로</Button>
       </div>
     );
   }
 
-  // 실제로 대신 해준 사람 (completed_by_id)
   const helperId = chore.completed_by_id;
   const helperName = helperId === partner?.id ? partner.nickname : '파트너';
 
@@ -62,100 +58,96 @@ export default function Thanks() {
 
   return (
     <div style={{ minHeight: '100vh', paddingBottom: '100px' }}>
-      {/* Header */}
-      <div style={{ padding: '20px 16px 16px', borderBottom: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <Button size="small" color="light" variant="weak" onClick={() => navigate('/home')}>
-          ←
-        </Button>
-        <Paragraph typography="t4" fontWeight="bold" color="#111827">
-          <Paragraph.Text>감사 선물 보내기</Paragraph.Text>
-        </Paragraph>
+      <Top
+        title={
+          <Top.TitleParagraph size={22} color={adaptive.grey900}>
+            감사 선물 보내기
+          </Top.TitleParagraph>
+        }
+      />
+
+      {/* Hero */}
+      <div style={{ textAlign: 'center', padding: '16px 20px 0' }}>
+        <div style={{ fontSize: '56px', lineHeight: 1 }}>🙏</div>
+        <Spacing size={12} />
+        <Text typography="t3" fontWeight="bold" color={adaptive.grey900} textAlign="center">
+          {helperName}님이 대신 해줬어요!
+        </Text>
+        <Spacing size={4} />
+        <Text typography="t6" color={adaptive.grey500} textAlign="center">
+          {`'${chore.title}'을 해줬어요. 고마운 마음을 전해보세요`}
+        </Text>
       </div>
 
-      <div style={{ padding: '24px 16px' }}>
-        {/* Gratitude hero */}
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '56px', lineHeight: 1 }}>🙏</div>
-          <Spacing size={12} />
-          <Paragraph typography="t3" fontWeight="bold" color="#111827" textAlign="center">
-            <Paragraph.Text>{helperName}님이 대신 해줬어요!</Paragraph.Text>
-          </Paragraph>
-          <Spacing size={4} />
-          <Paragraph typography="t6" color="#6b7280" textAlign="center">
-            <Paragraph.Text>'{chore.title}'을 해줬어요. 고마운 마음을 전해보세요</Paragraph.Text>
-          </Paragraph>
-        </div>
+      <Spacing size={28} />
 
-        <Spacing size={32} />
+      {/* 선물 선택 */}
+      <div style={{ padding: '0 20px' }}>
+        <Text typography="t5" fontWeight="bold" color={adaptive.grey900}>선물 고르기</Text>
+        <Spacing size={12} />
 
-        {/* Reward selection */}
-        <Paragraph typography="t6" fontWeight="semibold" color="#374151">
-          <Paragraph.Text>선물 고르기</Paragraph.Text>
-        </Paragraph>
-        <Spacing size={8} />
-
-        <div style={{ border: '1px solid #e5e7eb', borderRadius: '12px', overflow: 'hidden' }}>
+        <div style={{ borderRadius: '16px', overflow: 'hidden', border: `1px solid ${adaptive.grey200}` }}>
           {REWARD_TEMPLATES.map((template) => {
             const isSelected = !useCustom && selectedKey === template.key;
             return (
-              <div
+              <ListRow
                 key={template.key}
                 onClick={() => { setSelectedKey(template.key); setUseCustom(false); }}
+                withTouchEffect
+                border="none"
+                horizontalPadding="small"
+                left={<span style={{ fontSize: '24px', flexShrink: 0 }}>{template.emoji}</span>}
+                contents={
+                  <ListRow.Texts
+                    type="2RowTypeA"
+                    top={template.label}
+                    topProps={{ color: isSelected ? adaptive.blue500 : adaptive.grey900, fontWeight: isSelected ? 'bold' : 'medium' }}
+                    bottom=" "
+                  />
+                }
+                right={
+                  <Checkbox.Circle
+                    inputType="radio"
+                    checked={isSelected}
+                    onCheckedChange={() => { setSelectedKey(template.key); setUseCustom(false); }}
+                    size={22}
+                  />
+                }
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                  padding: '14px 16px',
-                  cursor: 'pointer',
-                  backgroundColor: isSelected ? '#eff6ff' : '#fff',
-                  borderBottom: '1px solid #f3f4f6',
+                  backgroundColor: isSelected ? adaptive.blue50 : '#fff',
+                  borderBottom: `1px solid ${adaptive.grey100}`,
                 }}
-              >
-                <span style={{ fontSize: '24px', flexShrink: 0 }}>{template.emoji}</span>
-                <Paragraph typography="t6" fontWeight={isSelected ? 'semibold' : 'medium'} color={isSelected ? '#3182f6' : '#111827'}>
-                  <Paragraph.Text>{template.label}</Paragraph.Text>
-                </Paragraph>
-                <div style={{ marginLeft: 'auto', flexShrink: 0 }}>
-                  <div style={{
-                    width: '20px', height: '20px', borderRadius: '10px',
-                    border: `2px solid ${isSelected ? '#3182f6' : '#d1d5db'}`,
-                    backgroundColor: isSelected ? '#3182f6' : 'transparent',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}>
-                    {isSelected && <span style={{ color: '#fff', fontSize: '11px' }}>✓</span>}
-                  </div>
-                </div>
-              </div>
+              />
             );
           })}
 
-          {/* Custom option */}
-          <div
+          {/* 직접 입력 */}
+          <ListRow
             onClick={() => { setUseCustom(true); setSelectedKey(null); }}
+            withTouchEffect
+            border="none"
+            horizontalPadding="small"
+            left={<span style={{ fontSize: '24px', flexShrink: 0 }}>✍️</span>}
+            contents={
+              <ListRow.Texts
+                type="2RowTypeA"
+                top="직접 입력하기"
+                topProps={{ color: useCustom ? adaptive.blue500 : adaptive.grey900, fontWeight: useCustom ? 'bold' : 'medium' }}
+                bottom=" "
+              />
+            }
+            right={
+              <Checkbox.Circle
+                inputType="radio"
+                checked={useCustom}
+                onCheckedChange={() => { setUseCustom(true); setSelectedKey(null); }}
+                size={22}
+              />
+            }
             style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              padding: '14px 16px',
-              cursor: 'pointer',
-              backgroundColor: useCustom ? '#eff6ff' : '#fff',
+              backgroundColor: useCustom ? adaptive.blue50 : '#fff',
             }}
-          >
-            <span style={{ fontSize: '24px', flexShrink: 0 }}>✍️</span>
-            <Paragraph typography="t6" fontWeight={useCustom ? 'semibold' : 'medium'} color={useCustom ? '#3182f6' : '#111827'}>
-              <Paragraph.Text>직접 입력하기</Paragraph.Text>
-            </Paragraph>
-            <div style={{ marginLeft: 'auto', flexShrink: 0 }}>
-              <div style={{
-                width: '20px', height: '20px', borderRadius: '10px',
-                border: `2px solid ${useCustom ? '#3182f6' : '#d1d5db'}`,
-                backgroundColor: useCustom ? '#3182f6' : 'transparent',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>
-                {useCustom && <span style={{ color: '#fff', fontSize: '11px' }}>✓</span>}
-              </div>
-            </div>
-          </div>
+          />
         </div>
 
         {useCustom && (
@@ -174,24 +166,13 @@ export default function Thanks() {
         {error && (
           <>
             <Spacing size={12} />
-            <Paragraph typography="t7" color="#dc2626">
-              <Paragraph.Text>{error}</Paragraph.Text>
-            </Paragraph>
+            <Text typography="t7" color={adaptive.red500}>{error}</Text>
           </>
         )}
       </div>
 
-      {/* Bottom CTA */}
-      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px', backgroundColor: '#fff' }}>
-        <Button
-          size="xlarge"
-          display="full"
-          color="primary"
-          variant="fill"
-          onClick={handleSubmit}
-          disabled={loading || !canSubmit}
-          loading={loading}
-        >
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px', backgroundColor: adaptive.background, borderTop: `1px solid ${adaptive.grey100}` }}>
+        <Button size="xlarge" display="full" color="primary" variant="fill" onClick={handleSubmit} disabled={loading || !canSubmit} loading={loading}>
           마음 전하기
         </Button>
       </div>

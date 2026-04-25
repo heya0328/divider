@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Paragraph, Spacing, TextField, Button } from '@toss/tds-mobile';
+import { Spacing, Top, TextField, Text, Button } from '@toss/tds-mobile';
+import { adaptive } from '@toss/tds-colors';
 import { useApp } from '../../context/AppContext';
 import { joinWithCode } from '../../data/couples';
 
@@ -11,7 +12,6 @@ export default function EnterCode() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // 이미 매칭 완료된 사용자는 홈으로
   useEffect(() => {
     if (user?.couple_id && partner) {
       navigate('/home', { replace: true });
@@ -24,12 +24,10 @@ export default function EnterCode() {
     setError(null);
     try {
       const updatedCouple = await joinWithCode(user.id, code);
-      // Update user with the new couple_id so the app knows we're matched
       dispatch({
         type: 'SET_USER',
         payload: { ...user, couple_id: updatedCouple.id },
       });
-      // 매칭 후 데이터 로드
       await refreshData();
       navigate('/home');
     } catch (err) {
@@ -48,15 +46,20 @@ export default function EnterCode() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', paddingBottom: '100px' }}>
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '24px' }}>
-        <Paragraph typography="t3" fontWeight="bold" color="#111827" textAlign="center">
-          <Paragraph.Text>초대코드 입력</Paragraph.Text>
-        </Paragraph>
-        <Spacing size={8} />
-        <Paragraph typography="t6" color="#6b7280" textAlign="center">
-          <Paragraph.Text>파트너에게 받은 6자리 코드를 입력해요</Paragraph.Text>
-        </Paragraph>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <Top
+        title={
+          <Top.TitleParagraph size={22} color={adaptive.grey900}>
+            초대코드 입력
+          </Top.TitleParagraph>
+        }
+      />
+
+      <div style={{ flex: 1, padding: '0 20px' }}>
+        <Text typography="t6" color={adaptive.grey500}>
+          파트너에게 받은 6자리 코드를 입력해요
+        </Text>
+
         <Spacing size={32} />
 
         <TextField
@@ -70,17 +73,9 @@ export default function EnterCode() {
         />
       </div>
 
-      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px' }}>
-        <Button
-          size="xlarge"
-          display="full"
-          color="primary"
-          variant="fill"
-          onClick={handleSubmit}
-          disabled={loading || code.length !== 6}
-          loading={loading}
-        >
-          {loading ? '확인 중...' : '파트너와 연결하기'}
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px', backgroundColor: adaptive.background, borderTop: `1px solid ${adaptive.grey100}` }}>
+        <Button size="xlarge" display="full" color="primary" variant="fill" onClick={handleSubmit} disabled={loading || code.length !== 6} loading={loading}>
+          파트너와 연결하기
         </Button>
       </div>
     </div>

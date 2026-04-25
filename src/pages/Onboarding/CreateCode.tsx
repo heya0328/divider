@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Paragraph, Spacing, Button } from '@toss/tds-mobile';
+import { Spacing, Text, Button, Top, Badge, Asset } from '@toss/tds-mobile';
+import { adaptive } from '@toss/tds-colors';
 import { useApp } from '../../context/AppContext';
 import { useShare } from '../../hooks/useShare';
 import { createInviteCode } from '../../data/couples';
@@ -16,41 +17,30 @@ export default function CreateCode() {
   const [error, setError] = useState<string | null>(null);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // 이미 매칭 완료된 사용자는 홈으로
   useEffect(() => {
     if (user?.couple_id && partner) {
       navigate('/home', { replace: true });
     }
   }, [user, partner, navigate]);
 
-  // 파트너가 코드를 입력했는지 폴링
   useEffect(() => {
     if (!couple) return;
-
     pollingRef.current = setInterval(async () => {
       const { data } = await supabase
         .from('couples')
         .select('*')
         .eq('id', couple.id)
         .single();
-
       if (data && data.user_b_id) {
-        // 파트너가 연결됨!
         setCouple(data as Couple);
         if (pollingRef.current) clearInterval(pollingRef.current);
-
-        // user 상태 업데이트
         if (user) {
           dispatch({ type: 'SET_USER', payload: { ...user, couple_id: data.id } });
         }
-
         navigate('/home');
       }
-    }, 3000); // 3초마다 확인
-
-    return () => {
-      if (pollingRef.current) clearInterval(pollingRef.current);
-    };
+    }, 3000);
+    return () => { if (pollingRef.current) clearInterval(pollingRef.current); };
   }, [couple, user, dispatch, navigate]);
 
   const handleCreateCode = async () => {
@@ -60,7 +50,6 @@ export default function CreateCode() {
     try {
       const result = await createInviteCode(user.id);
       setCouple(result);
-      // user 상태에 couple_id 반영
       dispatch({ type: 'SET_USER', payload: { ...user, couple_id: result.id } });
     } catch {
       setError('코드 생성에 실패했어요. 다시 시도해주세요.');
@@ -76,101 +65,116 @@ export default function CreateCode() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
-      <div style={{ maxWidth: '400px', width: '100%', textAlign: 'center' }}>
-        <Paragraph typography="t3" fontWeight="bold" color="#111827" textAlign="center">
-          <Paragraph.Text>파트너를 초대하세요</Paragraph.Text>
-        </Paragraph>
-        <Spacing size={8} />
-        <Paragraph typography="t6" color="#6b7280" textAlign="center">
-          <Paragraph.Text>초대코드를 만들어 파트너에게 공유해요</Paragraph.Text>
-        </Paragraph>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <Top
+        title={
+          <Top.TitleParagraph size={22} color={adaptive.grey900}>
+            파트너를 초대하세요
+          </Top.TitleParagraph>
+        }
+      />
+
+      <div style={{ flex: 1, padding: '0 20px' }}>
+        <Text typography="t6" color={adaptive.grey500}>
+          초대코드를 만들어 파트너에게 공유해요
+        </Text>
+
         <Spacing size={32} />
 
         {!couple ? (
-          <Button
-            size="xlarge"
-            display="full"
-            color="primary"
-            variant="fill"
-            onClick={handleCreateCode}
-            disabled={loading}
-            loading={loading}
-          >
-            초대코드 만들기
-          </Button>
+          <div style={{ textAlign: 'center', padding: '40px 0' }}>
+            <div style={{ fontSize: '56px', lineHeight: 1 }}>💌</div>
+            <Spacing size={16} />
+            <Text typography="t5" color={adaptive.grey500} textAlign="center">
+              초대코드를 만들어서 파트너에게 보내주세요
+            </Text>
+          </div>
         ) : (
           <>
-            <div style={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '16px', padding: '32px' }}>
-              <Paragraph typography="t7" color="#9ca3af" textAlign="center">
-                <Paragraph.Text>초대코드</Paragraph.Text>
-              </Paragraph>
-              <Spacing size={8} />
-              <Paragraph typography="t1" fontWeight="bold" color="#111827" textAlign="center">
-                <Paragraph.Text style={{ letterSpacing: '6px', fontFamily: 'monospace' }}>
+            {/* 코드 카드 */}
+            <div style={{
+              backgroundColor: adaptive.grey50,
+              borderRadius: '16px',
+              padding: '28px 24px',
+              textAlign: 'center',
+            }}>
+              <Text typography="t7" color={adaptive.grey500}>초대코드</Text>
+              <Spacing size={12} />
+              <Text
+                typography="t1"
+                fontWeight="bold"
+                color={adaptive.grey900}
+                textAlign="center"
+                display="block"
+              >
+                <span style={{ letterSpacing: '8px', fontFamily: 'monospace' }}>
                   {couple.invite_code}
-                </Paragraph.Text>
-              </Paragraph>
+                </span>
+              </Text>
+              <Spacing size={16} />
+              <Badge size="small" variant="fill" color="yellow">
+                24시간 내에 입력해야 해요
+              </Badge>
             </div>
+
+            <Spacing size={20} />
+
+            {/* 대기 상태 */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              padding: '16px',
+              backgroundColor: adaptive.blue50,
+              borderRadius: '12px',
+            }}>
+              <Asset.Icon
+                frameShape={Asset.frameShape.CleanW24}
+                name="icon-time-mono"
+                color={adaptive.blue500}
+                aria-hidden
+              />
+              <Text typography="t6" color={adaptive.blue500} fontWeight="medium">
+                파트너 연결을 기다리는 중...
+              </Text>
+            </div>
+
             <Spacing size={16} />
-            <Paragraph typography="t7" color="#6b7280" textAlign="center">
-              <Paragraph.Text>파트너가 이 코드를 입력하면 자동으로 연결돼요</Paragraph.Text>
-            </Paragraph>
-            <Spacing size={4} />
-            <Paragraph typography="t7" color="#f59e0b" textAlign="center">
-              <Paragraph.Text>24시간 내에 입력해야 해요</Paragraph.Text>
-            </Paragraph>
-            <Spacing size={16} />
+
             <Button
-              size="xlarge"
+              size="medium"
               display="full"
-              color="primary"
+              color="light"
               variant="fill"
-              onClick={handleShare}
+              onClick={() => navigate('/onboarding/enter')}
             >
-              코드 공유하기
+              이미 코드가 있어요
             </Button>
-            <Spacing size={12} />
-            <Paragraph typography="t7" color="#3b82f6" textAlign="center">
-              <Paragraph.Text>파트너 연결을 기다리는 중...</Paragraph.Text>
-            </Paragraph>
           </>
         )}
 
         {error && (
           <>
             <Spacing size={12} />
-            <Paragraph typography="t7" color="#dc2626" textAlign="center">
-              <Paragraph.Text>{error}</Paragraph.Text>
-            </Paragraph>
+            <Text typography="t7" color={adaptive.red500} textAlign="center">{error}</Text>
           </>
         )}
-
-        <Spacing size={16} />
-        <Button
-          size="large"
-          display="full"
-          color="light"
-          variant="fill"
-          onClick={() => navigate('/onboarding/enter')}
-        >
-          이미 코드가 있어요
-        </Button>
-
-        <Spacing size={32} />
-        <Button
-          size="small"
-          display="full"
-          color="light"
-          variant="weak"
-          onClick={() => {
-            localStorage.removeItem('divider_dev_user_id');
-            window.location.href = '/';
-          }}
-        >
-          다른 사용자로 시작하기
-        </Button>
       </div>
+
+      {!couple ? (
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px', backgroundColor: adaptive.background, borderTop: `1px solid ${adaptive.grey100}` }}>
+          <Button size="xlarge" display="full" color="primary" variant="fill" onClick={handleCreateCode} disabled={loading} loading={loading}>
+            초대코드 만들기
+          </Button>
+        </div>
+      ) : (
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px', backgroundColor: adaptive.background, borderTop: `1px solid ${adaptive.grey100}` }}>
+          <Button size="xlarge" display="full" color="primary" variant="fill" onClick={handleShare}>
+            코드 공유하기
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

@@ -132,6 +132,27 @@ export async function reassignChore(
   return data as Chore;
 }
 
+/** Reopen a completed chore — clears completion fields and sets the target status */
+export async function reopenChore(
+  choreId: string,
+  targetStatus: 'pending' | 'in_progress'
+): Promise<Chore> {
+  const { data, error } = await supabase
+    .from('chores')
+    .update({
+      status: targetStatus,
+      completed_by_id: null,
+      completed_at: null,
+    })
+    .eq('id', choreId)
+    .eq('status', 'completed')
+    .select('*')
+    .single();
+
+  if (error) throw error;
+  return data as Chore;
+}
+
 /** Revert a reassigned chore back to 'in_progress' for the new assignee */
 export async function revertToInProgress(choreId: string): Promise<Chore> {
   return updateChoreStatus(choreId, 'in_progress');

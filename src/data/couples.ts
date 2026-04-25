@@ -120,6 +120,20 @@ export async function joinWithCode(
 }
 
 /**
+ * Get couple info by couple ID.
+ */
+export async function getCoupleInfo(coupleId: string): Promise<Couple> {
+  const { data, error } = await supabase
+    .from('couples')
+    .select('*')
+    .eq('id', coupleId)
+    .single();
+
+  if (error) throw error;
+  return data as Couple;
+}
+
+/**
  * Get the partner of the current user within a couple.
  */
 export async function getPartner(
